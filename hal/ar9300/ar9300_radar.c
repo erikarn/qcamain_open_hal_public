@@ -11,15 +11,13 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_desc.h"
 #include "ah_internal.h"
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300phy.h"
-#include "ar9300/ar9300reg.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300phy.h"
+#include "ar9003/ar9300reg.h"
 
 /*
  * Default 5413/9300 radar phy parameters
@@ -33,9 +31,11 @@
 #define AR9300_DFS_RELPWR   8
 #define AR9300_DFS_RELSTEP  12
 #define AR9300_DFS_MAXLEN   255
-#define AR9300_DFS_PRSSI_CAC 10 
 
-#ifdef ATH_SUPPORT_DFS
+/*
+ * This PRSSI value should be used during CAC.
+ */
+#define AR9300_DFS_PRSSI_CAC 10 
 
 /*
  *  make sure that value matches value in ar9300_osprey_2p2_mac_core[][2]
@@ -119,13 +119,14 @@ struct dfs_bin5pulse ar9300_bin5pulses[] = {
 };
 
 
+#if 0
 /*
  * Find the internal HAL channel corresponding to the
  * public HAL channel specified in c
  */
 
 static HAL_CHANNEL_INTERNAL *
-getchannel(struct ath_hal *ah, const HAL_CHANNEL *c)
+getchannel(struct ath_hal *ah, const struct ieee80211_channel *c)
 {
 #define CHAN_FLAGS    (CHANNEL_ALL | CHANNEL_HALF | CHANNEL_QUARTER)
     HAL_CHANNEL_INTERNAL *base, *cc;
@@ -174,7 +175,7 @@ getchannel(struct ath_hal *ah, const HAL_CHANNEL *c)
  * mark the channel as clear and reset the internal tsf time
  */
 void
-ar9300_check_dfs(struct ath_hal *ah, HAL_CHANNEL *chan)
+ar9300_check_dfs(struct ath_hal *ah, struct ieee80211_channel *chan)
 {
     HAL_CHANNEL_INTERNAL *ichan = AH_NULL;
 
@@ -197,7 +198,7 @@ ar9300_check_dfs(struct ath_hal *ah, HAL_CHANNEL *chan)
  * be increased
  */
 void
-ar9300_dfs_found(struct ath_hal *ah, HAL_CHANNEL *chan, u_int64_t nol_time)
+ar9300_dfs_found(struct ath_hal *ah, struct ieee80211_channel *chan, u_int64_t nol_time)
 {
     HAL_CHANNEL_INTERNAL *ichan;
 
@@ -212,6 +213,7 @@ ar9300_dfs_found(struct ath_hal *ah, HAL_CHANNEL *chan, u_int64_t nol_time)
     ichan->priv_flags |= CHANNEL_INTERFERENCE;
     chan->priv_flags |= CHANNEL_INTERFERENCE;
 }
+#endif
 
 /*
  * Enable radar detection and set the radar parameters per the
@@ -222,7 +224,7 @@ ar9300_enable_dfs(struct ath_hal *ah, HAL_PHYERR_PARAM *pe)
 {
     u_int32_t val;
     struct ath_hal_private  *ahp = AH_PRIVATE(ah);
-    HAL_CHANNEL_INTERNAL *ichan = ahp->ah_curchan;
+    const struct ieee80211_channel *chan = ahp->ah_curchan;
     struct ath_hal_9300 *ah9300 = AH9300(ah);
     int reg_writes = 0;
 
@@ -243,11 +245,11 @@ ar9300_enable_dfs(struct ath_hal *ah, HAL_PHYERR_PARAM *pe)
     if (pe->pe_prssi != HAL_PHYERR_PARAM_NOVAL) {
         val &= ~AR_PHY_RADAR_0_PRSSI;
         if (AR_SREV_AR9580(ah) || (AR_SREV_WASP(ah))) {
-            if (ah->ah_use_cac_prssi) {
-                val |= SM(AR9300_DFS_PRSSI_CAC, AR_PHY_RADAR_0_PRSSI);
-            } else {
+//            if (ah->ah_use_cac_prssi) {
+//                val |= SM(AR9300_DFS_PRSSI_CAC, AR_PHY_RADAR_0_PRSSI);
+//            } else {
                 val |= SM(pe->pe_prssi, AR_PHY_RADAR_0_PRSSI);
-            }
+//            }
         } else {
             val |= SM(pe->pe_prssi, AR_PHY_RADAR_0_PRSSI);
         }
@@ -276,7 +278,7 @@ ar9300_enable_dfs(struct ath_hal *ah, HAL_PHYERR_PARAM *pe)
 
     if (ath_hal_getcapability(ah, HAL_CAP_EXT_CHAN_DFS, 0, 0) == HAL_OK) {
         val = OS_REG_READ(ah, AR_PHY_RADAR_EXT);
-        if (IS_CHAN_HT40(ichan)) {
+        if (IEEE80211_IS_CHAN_HT40(chan)) {
             /* Enable extension channel radar detection */
             OS_REG_WRITE(ah, AR_PHY_RADAR_EXT, val | AR_PHY_RADAR_EXT_ENA);
         } else {
@@ -290,15 +292,15 @@ ar9300_enable_dfs(struct ath_hal *ah, HAL_PHYERR_PARAM *pe)
     */
 
     if (AR_SREV_AR9580(ah) || AR_SREV_WASP(ah) || AR_SREV_OSPREY_22(ah)) {
-        REG_WRITE_ARRAY(&ah9300->ah_ini_dfs,IS_CHAN_HT40(ichan)? 2:1, reg_writes);
+        REG_WRITE_ARRAY(&ah9300->ah_ini_dfs,IEEE80211_IS_CHAN_HT40(chan)? 2:1, reg_writes);
     }
 #ifdef ATH_HAL_DFS_CHIRPING_FIX_APH128
-    HALDEBUG(ah, HAL_DEBUG_DFS,"DFS change the timing value\n");
-    if (AR_SREV_AR9580(ah) && IS_CHAN_HT40(ichan)) {
-        OS_REG_WRITE(ah, AR_PHY_TIMING6, 0x3140c00a);	
+    ath_hal_printf(ah, "DFS change the timing value\n");
+    if (AR_SREV_AR9580(ah) && IEEE80211_IS_CHAN_HT40(chan)) {
+        OS_REG_WRITE(ah, AR_PHY_TIMING6, 0x3140c00a);
     }
 #endif
-	
+
 }
 
 /*
@@ -322,18 +324,17 @@ ar9300_get_dfs_thresh(struct ath_hal *ah, HAL_PHYERR_PARAM *pe)
     val = OS_REG_READ(ah, AR_PHY_RADAR_1);
 
     pe->pe_relpwr = MS(val, AR_PHY_RADAR_1_RELPWR_THRESH);
-    if (val & AR_PHY_RADAR_1_RELPWR_ENA) {
-        pe->pe_relpwr |= HAL_PHYERR_PARAM_ENABLE;
-    }
+    pe->pe_enrelpwr = !! (val & AR_PHY_RADAR_1_RELPWR_ENA);
+
     pe->pe_relstep = MS(val, AR_PHY_RADAR_1_RELSTEP_THRESH);
-    if (val & AR_PHY_RADAR_1_RELSTEP_CHECK) {
-        pe->pe_relstep |= HAL_PHYERR_PARAM_ENABLE;
-    }
+    pe->pe_en_relstep_check = !! (val & AR_PHY_RADAR_1_RELSTEP_CHECK);
+
     pe->pe_maxlen = MS(val, AR_PHY_RADAR_1_MAXLEN);
 }
 
+#if 0
 HAL_BOOL
-ar9300_radar_wait(struct ath_hal *ah, HAL_CHANNEL *chan)
+ar9300_radar_wait(struct ath_hal *ah, struct ieee80211_channel *chan)
 {
     struct ath_hal_private *ahp = AH_PRIVATE(ah);
 
@@ -354,6 +355,7 @@ ar9300_radar_wait(struct ath_hal *ah, HAL_CHANNEL *chan)
     return AH_FALSE;
 
 }
+#endif
 
 struct dfs_pulse *
 ar9300_get_dfs_radars(
@@ -366,7 +368,7 @@ ar9300_get_dfs_radars(
 {
     struct dfs_pulse *dfs_radars = AH_NULL;
     switch (dfsdomain) {
-    case DFS_FCC_DOMAIN:
+    case HAL_DFS_FCC_DOMAIN:
         dfs_radars = &ar9300_fcc_radars[AR9300_FCC_RADARS_FCC_OFFSET];
         *numradars =
             ARRAY_LENGTH(ar9300_fcc_radars) - AR9300_FCC_RADARS_FCC_OFFSET;
@@ -374,14 +376,14 @@ ar9300_get_dfs_radars(
         *numb5radars = ARRAY_LENGTH(ar9300_bin5pulses);
         HALDEBUG(ah, HAL_DEBUG_DFS, "%s: DFS_FCC_DOMAIN_9300\n", __func__);
         break;
-    case DFS_ETSI_DOMAIN:
+    case HAL_DFS_ETSI_DOMAIN:
         dfs_radars = &ar9300_etsi_radars[0];
         *numradars = ARRAY_LENGTH(ar9300_etsi_radars);
         *bin5pulses = &ar9300_bin5pulses[0];
         *numb5radars = ARRAY_LENGTH(ar9300_bin5pulses);
         HALDEBUG(ah, HAL_DEBUG_DFS, "%s: DFS_ETSI_DOMAIN_9300\n", __func__);
         break;
-    case DFS_MKK4_DOMAIN:
+    case HAL_DFS_MKK4_DOMAIN:
         dfs_radars = &ar9300_fcc_radars[0];
         *numradars = ARRAY_LENGTH(ar9300_fcc_radars);
         *bin5pulses = &ar9300_bin5pulses[0];
@@ -406,7 +408,7 @@ ar9300_get_dfs_radars(
         We use this flag to keep track of change in PRSSI.
     */
 
-    ah->ah_use_cac_prssi = 0;
+//    ah->ah_use_cac_prssi = 0;
 
     pe->pe_inband = AR9300_DFS_INBAND;
     pe->pe_relpwr = AR9300_DFS_RELPWR;
@@ -424,7 +426,7 @@ void ar9300_adjust_difs(struct ath_hal *ah, u_int32_t val)
          * in ar9300_osprey22.ini
          */
 
-        ah->ah_fccaifs = 0;
+        AH9300(ah)->ah_fccaifs = 0;
         HALDEBUG(ah, HAL_DEBUG_DFS, "%s: set DIFS to default\n", __func__);
         /*printk("%s: set DIFS to default\n", __func__);*/
         OS_REG_WRITE(ah, AR_DLCL_IFS(0), AR9300_DEFAULT_DIFS);
@@ -437,7 +439,7 @@ void ar9300_adjust_difs(struct ath_hal *ah, u_int32_t val)
          * FCC domain. They are yet to be determined for other domains. 
          */
 
-        ah->ah_fccaifs = 1;
+        AH9300(ah)->ah_fccaifs = 1;
         HALDEBUG(ah, HAL_DEBUG_DFS, "%s: set DIFS to default\n", __func__);
         /*printk("%s:  modify DIFS\n", __func__);*/
         
@@ -483,12 +485,12 @@ ar9300_dfs_cac_war(struct ath_hal *ah, u_int32_t start)
             val |= SM(AR9300_DFS_PRSSI, AR_PHY_RADAR_0_PRSSI);
         }
         OS_REG_WRITE(ah, AR_PHY_RADAR_0, val | AR_PHY_RADAR_0_ENA);
-        ah->ah_use_cac_prssi = start;
+//        ah->ah_use_cac_prssi = start;
     }
 }
-#endif /* ATH_SUPPORT_DFS */
 
-HAL_CHANNEL *
+#if 0
+struct ieee80211_channel *
 ar9300_get_extension_channel(struct ath_hal *ah)
 {
     struct ath_hal_private  *ahp = AH_PRIVATE(ah);
@@ -506,12 +508,12 @@ ar9300_get_extension_channel(struct ath_hal *ah)
     for (i = 0; i < ahp->ah_nchan; i++) {
         ichan = &aht->ah_channels[i];
         if (ichan->channel == centers.ext_center) {
-            return (HAL_CHANNEL*)ichan;
+            return (struct ieee80211_channel*)ichan;
         }
     }
     return AH_NULL;
 }
-
+#endif
 
 HAL_BOOL
 ar9300_is_fast_clock_enabled(struct ath_hal *ah)
@@ -524,6 +526,11 @@ ar9300_is_fast_clock_enabled(struct ath_hal *ah)
     return AH_FALSE;
 }
 
+/*
+ * This should be enabled and linked into the build once
+ * radar support is enabled.
+ */
+#if 0
 HAL_BOOL
 ar9300_handle_radar_bb_panic(struct ath_hal *ah)
 {
@@ -571,11 +578,10 @@ ar9300_handle_radar_bb_panic(struct ath_hal *ah)
 #ifdef AH_DEBUG
             HALDEBUG(ah, HAL_DEBUG_UNMASKABLE, "%s: BB status=0x%08x rifs=%d - disable\n",
                      __func__, status, ahp->ah_rifs_enabled);
-#endif
             ar9300_set_rifs_delay(ah, AH_FALSE);
         }
         return AH_FALSE;
     }
 }
-
+#endif
 #endif

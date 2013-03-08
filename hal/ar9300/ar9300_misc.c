@@ -10,8 +10,6 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_internal.h"
 #include "ah_devid.h"
@@ -19,9 +17,9 @@
 #include "ah_desc.h"                    /* NB: for HAL_PHYERR* */
 #endif
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300reg.h"
-#include "ar9300/ar9300phy.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300reg.h"
+#include "ar9003/ar9300phy.h"
 
 
 void
@@ -53,12 +51,18 @@ ar9300_get_hw_hangs(struct ath_hal *ah, hal_hw_hangs_t *hangs)
     ahp->ah_hang_wars = *hangs;
 }
 
+/*
+ * XXX FreeBSD:
+ *
+ * .. why is this even _here_ ? See who's using it.. convert to using
+ * the ath_hal_mac_usec() function that ALREADY knows about HT20/HT40.
+ */
 static u_int
 ar9300_mac_to_usec(struct ath_hal *ah, u_int clks)
 {
-    HAL_CHANNEL_INTERNAL *chan = AH_PRIVATE(ah)->ah_curchan;
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
 
-    if (chan && IS_CHAN_HT40(chan)) {
+    if (chan && IEEE80211_IS_CHAN_HT40(chan)) {
         return (ath_hal_mac_usec(ah, clks) / 2);
     } else {
         return (ath_hal_mac_usec(ah, clks));
@@ -68,9 +72,9 @@ ar9300_mac_to_usec(struct ath_hal *ah, u_int clks)
 u_int
 ar9300_mac_to_clks(struct ath_hal *ah, u_int usecs)
 {
-    HAL_CHANNEL_INTERNAL *chan = AH_PRIVATE(ah)->ah_curchan;
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
 
-    if (chan && IS_CHAN_HT40(chan)) {
+    if (chan && IEEE80211_IS_CHAN_HT40(chan)) {
         return (ath_hal_mac_clks(ah, usecs) * 2);
     } else {
         return (ath_hal_mac_clks(ah, usecs));
@@ -126,13 +130,13 @@ ar9300_set_regulatory_domain(struct ath_hal *ah,
 {
     HAL_STATUS ecode;
 
-    if (AH_PRIVATE(ah)->ah_current_rd == 0) {
-        AH_PRIVATE(ah)->ah_current_rd = reg_domain;
+    if (AH_PRIVATE(ah)->ah_currentRD == 0) {
+        AH_PRIVATE(ah)->ah_currentRD = reg_domain;
         return AH_TRUE;
     }
     ecode = HAL_EIO;
 
-#if tbd
+#if 0
 bad:
 #endif
     if (status) {
@@ -151,7 +155,7 @@ bad:
 u_int
 ar9300_get_wireless_modes(struct ath_hal *ah)
 {
-    return AH_PRIVATE(ah)->ah_caps.hal_wireless_modes;
+    return AH_PRIVATE(ah)->ah_caps.halWirelessModes;
 }
 
 /*
@@ -195,7 +199,7 @@ ar9300_enable_rf_kill(struct ath_hal *ah)
          * Configure the desired GPIO port for input and
          * enable baseband rf silence
          */
-        ath_hal_gpio_cfg_input(ah, ahp->ah_gpio_select);
+        ath_hal_gpioCfgInput(ah, ahp->ah_gpio_select);
         OS_REG_SET_BIT(ah, AR_PHY_TEST, RFSILENT_BB);
     }
 
@@ -351,12 +355,12 @@ ar9300_reset_tsf(struct ath_hal *ah)
 void
 ar9300_set_basic_rate(struct ath_hal *ah, HAL_RATE_SET *rs)
 {
-    HAL_CHANNEL_INTERNAL *chan = AH_PRIVATE(ah)->ah_curchan;
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
     u_int32_t reg;
     u_int8_t xset;
     int i;
 
-    if (chan == AH_NULL || !IS_CHAN_CCK(chan)) {
+    if (chan == AH_NULL || !IEEE80211_IS_CHAN_CCK(chan)) {
         return;
     }
     xset = 0;
@@ -509,8 +513,8 @@ ar9300_set_def_antenna(struct ath_hal *ah, u_int antenna)
 
 HAL_BOOL
 ar9300_set_antenna_switch(struct ath_hal *ah,
-    HAL_ANT_SETTING settings, HAL_CHANNEL *chan, u_int8_t *tx_chainmask,
-    u_int8_t *rx_chainmask, u_int8_t *antenna_cfgd)
+    HAL_ANT_SETTING settings, const struct ieee80211_channel *chan,
+    u_int8_t *tx_chainmask, u_int8_t *rx_chainmask, u_int8_t *antenna_cfgd)
 {
     struct ath_hal_9300 *ahp = AH9300(ah);
 
@@ -597,6 +601,7 @@ HAL_STATUS
 ar9300_set_quiet(struct ath_hal *ah, u_int32_t period, u_int32_t duration,
                  u_int32_t next_start, HAL_QUIET_FLAG flag)
 {
+#define	TU_TO_USEC(_tu)		((_tu) << 10)
     HAL_STATUS status = HAL_EIO;
     u_int32_t tsf = 0, j, next_start_us = 0;
     if (flag & HAL_QUIET_ENABLE) {
@@ -608,7 +613,7 @@ ar9300_set_quiet(struct ath_hal *ah, u_int32_t period, u_int32_t duration,
             }
             if (flag & HAL_QUIET_ADD_SWBA_RESP_TIME) {
                 next_start_us += 
-                    AH_PRIVATE(ah)->ah_config.ath_hal_sw_beacon_response_time;
+                    ah->ah_config.ah_sw_beacon_response_time;
             }
             OS_REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1); 
             OS_REG_WRITE(ah, AR_QUIET2, SM(duration, AR_QUIET2_QUIET_DUR));
@@ -630,6 +635,7 @@ ar9300_set_quiet(struct ath_hal *ah, u_int32_t period, u_int32_t duration,
     }
 
     return status;
+#undef	TU_TO_USEC
 }
 #ifdef ATH_SUPPORT_DFS
 void
@@ -715,7 +721,7 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
         case 0:                 /* hardware capability */
             return HAL_OK;
         case 1:
-            return AH_PRIVATE(ah)->ah_config.ath_hal_desc_tpc ?
+            return ah->ah_config.ath_hal_desc_tpc ?
                                HAL_OK : HAL_ENXIO;
         }
         return HAL_OK;
@@ -742,7 +748,7 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
     case HAL_CAP_TSF_ADJUST:        /* hardware has beacon tsf adjust */
         switch (capability) {
         case 0:                 /* hardware capability */
-            return p_cap->hal_tsf_add_support ? HAL_OK : HAL_ENOTSUPP;
+            return p_cap->halTsfAddSupport ? HAL_OK : HAL_ENOTSUPP;
         case 1:
             return (ahp->ah_misc_mode & AR_PCU_TX_ADD_TSF) ?
                 HAL_OK : HAL_ENXIO;
@@ -776,11 +782,12 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
     case HAL_CAP_RIFS_RX_ENABLED:
         /* Is RIFS RX currently enabled */
         return (ahp->ah_rifs_enabled == AH_TRUE) ?  HAL_OK : HAL_ENOTSUPP;
+#if 0
     case HAL_CAP_ANT_CFG_2GHZ:
-        *result = p_cap->hal_num_ant_cfg_2ghz;
+        *result = p_cap->halNumAntCfg2Ghz;
         return HAL_OK;
     case HAL_CAP_ANT_CFG_5GHZ:
-        *result = p_cap->hal_num_ant_cfg_5ghz;
+        *result = p_cap->halNumAntCfg5Ghz;
         return HAL_OK;
     case HAL_CAP_RX_STBC:
         *result = p_cap->hal_rx_stbc_support;
@@ -788,20 +795,21 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
     case HAL_CAP_TX_STBC:
         *result = p_cap->hal_tx_stbc_support;
         return HAL_OK;
+#endif
     case HAL_CAP_LDPC:
-        *result = p_cap->hal_ldpc_support;
+        *result = p_cap->halLDPCSupport;
         return HAL_OK;
     case HAL_CAP_DYNAMIC_SMPS:
         return HAL_OK;
     case HAL_CAP_DS:
         return (AR_SREV_HORNET(ah) || AR_SREV_POSEIDON(ah) || AR_SREV_APHRODITE(ah) ||
-                (p_cap->hal_tx_chain_mask & 0x3) != 0x3 ||
-                (p_cap->hal_rx_chain_mask & 0x3) != 0x3) ?
+                (p_cap->halTxChainMask & 0x3) != 0x3 ||
+                (p_cap->halRxChainMask & 0x3) != 0x3) ?
             HAL_ENOTSUPP : HAL_OK;
     case HAL_CAP_TS:
         return (AR_SREV_HORNET(ah) || AR_SREV_POSEIDON(ah) || AR_SREV_APHRODITE(ah) ||
-                (p_cap->hal_tx_chain_mask & 0x7) != 0x7 ||
-                (p_cap->hal_rx_chain_mask & 0x7) != 0x7) ?
+                (p_cap->halTxChainMask & 0x7) != 0x7 ||
+                (p_cap->halRxChainMask & 0x7) != 0x7) ?
             HAL_ENOTSUPP : HAL_OK;
     case HAL_CAP_OL_PWRCTRL:
         return (ar9300_eeprom_get(ahp, EEP_OL_PWRCTRL)) ?
@@ -809,17 +817,19 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
     case HAL_CAP_CRDC:
 #if ATH_SUPPORT_CRDC
         return (AR_SREV_WASP(ah) && 
-                AH_PRIVATE(ah)->ah_config.ath_hal_crdc_enable) ? 
+                ah->ah_config.ath_hal_crdc_enable) ? 
                     HAL_OK : HAL_ENOTSUPP;
 #else
         return HAL_ENOTSUPP;
 #endif
+#if 0
     case HAL_CAP_MAX_WEP_TKIP_HT20_TX_RATEKBPS:
         *result = (u_int32_t)(-1);
         return HAL_OK;
     case HAL_CAP_MAX_WEP_TKIP_HT40_TX_RATEKBPS:
         *result = (u_int32_t)(-1);
         return HAL_OK;
+#endif
     case HAL_CAP_BB_PANIC_WATCHDOG:
         return HAL_OK;
     case HAL_CAP_PHYRESTART_CLR_WAR:
@@ -852,7 +862,7 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
          */
         return HAL_OK;    
     case HAL_CAP_ENABLE_APM:
-        *result = p_cap->hal_enable_apm;
+        *result = p_cap->halApmEnable;
         return HAL_OK;
     case HAL_CAP_PCIE_LCR_EXTSYNC_EN:
         return (p_cap->hal_pcie_lcr_extsync_en == AH_TRUE) ? HAL_OK : HAL_ENOTSUPP;
@@ -920,7 +930,7 @@ ar9300_set_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
         OS_REG_WRITE(ah, AR_DIAG_SW, AH_PRIVATE(ah)->ah_diagreg);
         return AH_TRUE;
     case HAL_CAP_TPC:
-        AH_PRIVATE(ah)->ah_config.ath_hal_desc_tpc = (setting != 0);
+        ah->ah_config.ath_hal_desc_tpc = (setting != 0);
         return AH_TRUE;
     case HAL_CAP_MCAST_KEYSRCH:     /* multicast frame keycache search */
         if (setting) {
@@ -930,7 +940,7 @@ ar9300_set_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
         }
         return AH_TRUE;
     case HAL_CAP_TSF_ADJUST:        /* hardware has beacon tsf adjust */
-        if (p_cap->hal_tsf_add_support) {
+        if (p_cap->halTsfAddSupport) {
             if (setting) {
                 ahp->ah_misc_mode |= AR_PCU_TX_ADD_TSF;
             } else {
@@ -1143,9 +1153,11 @@ ar9300_get_diag_state(struct ath_hal *ah, int request,
         return AH_TRUE;
 #endif /* AH_PRIVATE_DIAG */
     case HAL_DIAG_CHANNELS:
+#if 0
         *result = &(ahp->ah_priv.ah_channels[0]);
         *resultsize =
             sizeof(ahp->ah_priv.ah_channels[0]) * ahp->ah_priv.priv.ah_nchan;
+#endif
         return AH_TRUE;
 #ifdef AH_DEBUG
     case HAL_DIAG_PRINT_REG:
@@ -1170,8 +1182,11 @@ ar9300_dma_reg_dump(struct ath_hal *ah)
     int       qcu_offset = 0, dcu_offset = 0;
     u_int32_t *qcu_base  = &val[0], *dcu_base = &val[4], reg;
     int       i, j, k;
-    int16_t nfarray[NUM_NF_READINGS];
-    HAL_NFCAL_HIST_FULL *h = AH_HOME_CHAN_NFCAL_HIST(ah);
+    int16_t nfarray[HAL_NUM_NF_READINGS];
+#ifdef	ATH_NF_PER_CHAN
+    HAL_CHANNEL_INTERNAL *ichan = ath_hal_checkchannel(ah, AH_PRIVATE(ah)->ah_curchan);
+#endif	/* ATH_NF_PER_CHAN */
+    HAL_NFCAL_HIST_FULL *h = AH_HOME_CHAN_NFCAL_HIST(ah, ichan);
 
      /* selecting DMA OBS 8 */
     OS_REG_WRITE(ah, AR_MACMISC, 
@@ -1253,7 +1268,7 @@ ar9300_dma_reg_dump(struct ath_hal *ah)
     ath_hal_printf(ah, "Extension:\t%8d\t%8d\t%8d\n\n",
                    nfarray[3], nfarray[4], nfarray[5]);
 
-    for (i = 0; i < NUM_NF_READINGS; i++) {
+    for (i = 0; i < HAL_NUM_NF_READINGS; i++) {
         ath_hal_printf(ah, "%s Chain %d NF History:\n",
                        ((i < 3) ? "Control " : "Extension "), i%3);
         for (j = 0, k = h->base.curr_index;
@@ -1475,7 +1490,7 @@ ar9300_get_mib_cycle_counts_pct(struct ath_hal *ah, u_int32_t *rxc_pcnt,
  * 0% (clear) -> 100% (busy)
  * -1 for invalid estimate 
  */
-int8_t
+uint32_t
 ar9300_get_11n_ext_busy(struct ath_hal *ah)
 {
     /*
@@ -1562,8 +1577,8 @@ void
 ar9300_config_bb_panic_watchdog(struct ath_hal *ah)
 {
 #define HAL_BB_PANIC_IDLE_TIME_OUT 0x0a8c0000
-    HAL_CHANNEL_INTERNAL *chan = AH_PRIVATE(ah)->ah_curchan;
-    u_int32_t idle_tmo_ms = AH_PRIVATE(ah)->ah_bb_panic_timeout_ms;
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
+    u_int32_t idle_tmo_ms = AH9300(ah)->ah_bb_panic_timeout_ms;
     u_int32_t val, idle_count;
 
     if (idle_tmo_ms != 0) {
@@ -1576,7 +1591,7 @@ ar9300_config_bb_panic_watchdog(struct ath_hal *ah)
         if (idle_tmo_ms > 10000) {
             idle_tmo_ms = 10000;
         }
-        if (chan != AH_NULL && IS_CHAN_HT40(chan)) {
+        if (chan != AH_NULL && IEEE80211_IS_CHAN_HT40(chan)) {
             idle_count = (100 * idle_tmo_ms) / HAL_BB_PANIC_WD_HT40_FACTOR;
         } else {
             idle_count = (100 * idle_tmo_ms) / HAL_BB_PANIC_WD_HT20_FACTOR;
@@ -1605,7 +1620,7 @@ ar9300_config_bb_panic_watchdog(struct ath_hal *ah)
             ~(AR_PHY_BB_PANIC_NON_IDLE_ENABLE | AR_PHY_BB_PANIC_IDLE_ENABLE));
     }
 
-    HALDEBUG(ah, HAL_DEBUG_RF_PARAM, "%s: %s BB Panic Watchdog tmo=%ums\n", 
+    HALDEBUG(ah, HAL_DEBUG_RFPARAM, "%s: %s BB Panic Watchdog tmo=%ums\n", 
              __func__, idle_tmo_ms ? "Enabled" : "Disabled", idle_tmo_ms);
 #undef HAL_BB_PANIC_IDLE_TIME_OUT
 }
@@ -1619,7 +1634,7 @@ ar9300_handle_bb_panic(struct ath_hal *ah)
      * we want to avoid printing in ISR context so we save 
      * panic watchdog status to be printed later in DPC context
      */
-    AH_PRIVATE(ah)->ah_bb_panic_last_status = status =
+    AH9300(ah)->ah_bb_panic_last_status = status =
         OS_REG_READ(ah, AR_PHY_PANIC_WD_STATUS);
     /*
      * panic watchdog timer should reset on status read
@@ -1631,7 +1646,7 @@ ar9300_handle_bb_panic(struct ath_hal *ah)
 int
 ar9300_get_bb_panic_info(struct ath_hal *ah, struct hal_bb_panic_info *bb_panic)
 {
-    bb_panic->status = AH_PRIVATE(ah)->ah_bb_panic_last_status;
+    bb_panic->status = AH9300(ah)->ah_bb_panic_last_status;
 
     /*
      * For signature 04000539 do not print anything.
@@ -1669,7 +1684,7 @@ ar9300_get_bb_panic_info(struct ath_hal *ah, struct hal_bb_panic_info *bb_panic)
                                         &bb_panic->rxf_pcnt, 
                                         &bb_panic->txf_pcnt);
 
-    if (AH_PRIVATE(ah)->ah_config.ath_hal_show_bb_panic) {
+    if (ah->ah_config.ath_hal_show_bb_panic) {
         ath_hal_printf(ah, "\n==== BB update: BB status=0x%08x, "
             "tsf=0x%08x ====\n", bb_panic->status, bb_panic->tsf);
         ath_hal_printf(ah, "** BB state: wd=%u det=%u rdar=%u rOFDM=%d "
@@ -1696,7 +1711,7 @@ ar9300_get_bb_panic_info(struct ath_hal *ah, struct hal_bb_panic_info *bb_panic)
 void 
 ar9300_set_hal_reset_reason(struct ath_hal *ah, u_int8_t resetreason)
 {
-    AH_PRIVATE(ah)->ah_reset_reason = resetreason;
+    AH9300(ah)->ah_reset_reason = resetreason;
 }
 
 /*
@@ -1715,7 +1730,7 @@ ar9300_set_11n_mac2040(struct ath_hal *ah, HAL_HT_MACMODE mode)
 
     /* Configure MAC for 20/40 operation */
     if (mode == HAL_HT_MACMODE_2040 &&
-        !AH_PRIVATE(ah)->ah_config.ath_hal_cwm_ignore_ext_cca) {
+        !ah->ah_config.ath_hal_cwm_ignore_ext_cca) {
         macmode = AR_2040_JOINED_RX_CLEAR;
     } else {
         macmode = 0;
@@ -1834,7 +1849,7 @@ ar9300_ppm_force(struct ath_hal *ah)
     }
     if (data_fine > AR_PHY_CHAN_INFO_GAIN_DIFF_UPPER_LIMIT)
     {
-        HALDEBUG(ah, HAL_DEBUG_REG_IO,
+        HALDEBUG(ah, HAL_DEBUG_REGIO,
             "%s Correcting ppm out of range %x\n",
             __func__, (data_fine & 0x7ff));
         data_fine = AR_PHY_CHAN_INFO_GAIN_DIFF_UPPER_LIMIT;
@@ -1913,9 +1928,13 @@ ar9300_ppm_get_force_state(struct ath_hal *ah)
 /*
  * Return the Cycle counts for rx_frame, rx_clear, and tx_frame
  */
-void
-ar9300_get_mib_cycle_counts(struct ath_hal *ah, HAL_COUNTERS* p_cnts)
+HAL_BOOL
+ar9300_get_mib_cycle_counts(struct ath_hal *ah, HAL_SURVEY_SAMPLE *hs)
 {
+    /*
+     * XXX FreeBSD todo: reimplement this
+     */
+#if 0
     p_cnts->tx_frame_count = OS_REG_READ(ah, AR_TFCNT);
     p_cnts->rx_frame_count = OS_REG_READ(ah, AR_RFCNT);
     p_cnts->rx_clear_count = OS_REG_READ(ah, AR_RCCNT);
@@ -1924,6 +1943,8 @@ ar9300_get_mib_cycle_counts(struct ath_hal *ah, HAL_COUNTERS* p_cnts)
                            p_cnts->tx_frame_count) ? AH_FALSE : AH_TRUE;
     p_cnts->is_rx_active   = (OS_REG_READ(ah, AR_RFCNT) ==
                            p_cnts->rx_frame_count) ? AH_FALSE : AH_TRUE;
+#endif
+    return AH_FALSE;
 }
 
 void
@@ -1942,8 +1963,10 @@ HAL_BOOL
 ar9300_set_rifs_delay(struct ath_hal *ah, HAL_BOOL enable)
 {
     struct ath_hal_9300 *ahp = AH9300(ah);
-    HAL_BOOL is_chan_2g = IS_CHAN_2GHZ(AH_PRIVATE(ah)->ah_curchan);
-    u_int32_t tmp = 0;    
+    HAL_CHANNEL_INTERNAL *ichan =
+      ath_hal_checkchannel(ah, AH_PRIVATE(ah)->ah_curchan);
+    HAL_BOOL is_chan_2g = IS_CHAN_2GHZ(ichan);
+    u_int32_t tmp = 0;
 
     if (enable) {
         if (ahp->ah_rifs_enabled == AH_TRUE) {
@@ -1967,13 +1990,13 @@ ar9300_set_rifs_delay(struct ath_hal *ah, HAL_BOOL enable)
                      (ahp->ah_rifs_reg[1] & ~(AR_PHY_RIFS_INIT_DELAY)));
         tmp = 0xfffff000 & OS_REG_READ(ah, AR_PHY_SEARCH_START_DELAY);        
         if (is_chan_2g) {
-            if (IS_CHAN_HT40(AH_PRIVATE(ah)->ah_curchan)) {
+            if (IEEE80211_IS_CHAN_HT40(AH_PRIVATE(ah)->ah_curchan)) {
                 OS_REG_WRITE(ah, AR_PHY_SEARCH_START_DELAY, tmp | 500);
             } else { /* Sowl 2G HT-20 default is 0x134 for search start delay */
                 OS_REG_WRITE(ah, AR_PHY_SEARCH_START_DELAY, tmp | 250);
             }
         } else {
-            if (IS_CHAN_HT40(AH_PRIVATE(ah)->ah_curchan)) {
+            if (IEEE80211_IS_CHAN_HT40(AH_PRIVATE(ah)->ah_curchan)) {
                 OS_REG_WRITE(ah, AR_PHY_SEARCH_START_DELAY, tmp | 0x370);
             } else { /* Sowl 5G HT-20 default is 0x1b8 for search start delay */
                 OS_REG_WRITE(ah, AR_PHY_SEARCH_START_DELAY, tmp | 0x1b8);
@@ -2160,13 +2183,14 @@ HAL_STATUS
 ar9300_select_ant_config(struct ath_hal *ah, u_int32_t cfg)
 {
     struct ath_hal_9300     *ahp = AH9300(ah);
-    HAL_CHANNEL_INTERNAL    *chan = AH_PRIVATE(ah)->ah_curchan;
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
+    HAL_CHANNEL_INTERNAL    *ichan = ath_hal_checkchannel(ah, chan);
     const HAL_CAPABILITIES  *p_cap = &AH_PRIVATE(ah)->ah_caps;
     u_int16_t               ant_config;
     u_int32_t               hal_num_ant_config;
 
-    hal_num_ant_config = IS_CHAN_2GHZ(chan) ?
-        p_cap->hal_num_ant_cfg_2ghz : p_cap->hal_num_ant_cfg_5ghz;
+    hal_num_ant_config = IS_CHAN_2GHZ(ichan) ?
+        p_cap->halNumAntCfg2GHz: p_cap->halNumAntCfg5GHz;
 
     if (cfg < hal_num_ant_config) {
         if (HAL_OK == ar9300_eeprom_get_ant_cfg(ahp, chan, cfg, &ant_config)) {
@@ -2184,16 +2208,16 @@ ar9300_select_ant_config(struct ath_hal *ah, u_int32_t cfg)
 void
 ar9300_set_dcs_mode(struct ath_hal *ah, u_int32_t mode)
 {
-    AH_PRIVATE(ah)->ah_dcs_enable = mode;
+    AH9300(ah)->ah_dcs_enable = mode;
 }
 
 u_int32_t
 ar9300_get_dcs_mode(struct ath_hal *ah)
 {
-    return AH_PRIVATE(ah)->ah_dcs_enable;
+    return AH9300(ah)->ah_dcs_enable;
 }
 
-#ifdef ATH_BT_COEX
+#if ATH_BT_COEX
 void
 ar9300_set_bt_coex_info(struct ath_hal *ah, HAL_BT_COEX_INFO *btinfo)
 {
@@ -2400,7 +2424,7 @@ ar9300_bt_coex_disable(struct ath_hal *ah)
     struct ath_hal_9300 *ahp = AH9300(ah);
 
     /* Always drive rx_clear_external output as 0 */
-    ath_hal_gpio_cfg_output(ah, ahp->ah_wlan_active_gpio_select,
+    ath_hal_gpioCfgOutput(ah, ahp->ah_wlan_active_gpio_select,
         HAL_GPIO_OUTPUT_MUX_AS_OUTPUT);
 
     if (ahp->ah_bt_coex_single_ant == AH_TRUE) {
@@ -2450,7 +2474,7 @@ ar9300_bt_coex_enable(struct ath_hal *ah)
 
     if (ahp->ah_bt_coex_config_type == HAL_BT_COEX_CFG_3WIRE) {
         /* For 3-wire, configure the desired GPIO port for rx_clear */
-        ath_hal_gpio_cfg_output(ah,
+        ath_hal_gpioCfgOutput(ah,
             ahp->ah_wlan_active_gpio_select,
             HAL_GPIO_OUTPUT_MUX_AS_WLAN_ACTIVE);
     }
@@ -2458,7 +2482,7 @@ ar9300_bt_coex_enable(struct ath_hal *ah)
         (ahp->ah_bt_coex_config_type <= HAL_BT_COEX_CFG_2WIRE_CH0))
     {
         /* For 2-wire, configure the desired GPIO port for TX_FRAME output */
-        ath_hal_gpio_cfg_output(ah,
+        ath_hal_gpioCfgOutput(ah,
             ahp->ah_wlan_active_gpio_select,
             HAL_GPIO_OUTPUT_MUX_AS_TX_FRAME);
     }
@@ -2600,6 +2624,7 @@ HAL_STATUS ar9300_set_proxy_sta(struct ath_hal *ah, HAL_BOOL enable)
     return retval;
 }
 
+#if 0
 void ar9300_mat_enable(struct ath_hal *ah, int enable)
 {
     /*
@@ -2628,16 +2653,16 @@ void ar9300_mat_enable(struct ath_hal *ah, int enable)
         OS_REG_WRITE(ah, AR_RIMT, 0);
     }
 
-    ap->ah_enable_keysearch_always = !!enable;
-    ar9300_enable_keysearch_always(ah, ap->ah_enable_keysearch_always);
+    ahp->ah_enable_keysearch_always = !!enable;
+    ar9300_enable_keysearch_always(ah, ahp->ah_enable_keysearch_always);
 }
-
+#endif
 
 void ar9300_enable_tpc(struct ath_hal *ah)
 {
     u_int32_t val = 0;
 
-    AH_PRIVATE(ah)->ah_config.ath_hal_desc_tpc = 1;
+    ah->ah_config.ath_hal_desc_tpc = 1;
 
     /* Enable TPC */
     OS_REG_RMW_FIELD(ah, AR_PHY_PWRTX_MAX, AR_PHY_PER_PACKET_POWERTX_MAX, 1);
@@ -2683,11 +2708,11 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
     int8_t              tmp_rss1_thr1, tmp_rss1_thr2;
 
     if ((AH_PRIVATE(ah)->ah_opmode != HAL_M_STA) || 
-        !AH_PRIVATE(ah)->ah_config.ath_hal_sta_update_tx_pwr_enable) {
+        !ah->ah_config.ath_hal_sta_update_tx_pwr_enable) {
         return;
     }
     
-    old_greentx_status = AH_PRIVATE(ah)->green_tx_status;
+    old_greentx_status = AH9300(ah)->green_tx_status;
     if (ahp->ah_hw_green_tx_enable) {
         tmp_rss1_thr1 = AR9485_HW_GREEN_TX_THRES1_DB;
         tmp_rss1_thr2 = AR9485_HW_GREEN_TX_THRES2_DB;
@@ -2696,35 +2721,35 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
         tmp_rss1_thr2 = WB225_SW_GREEN_TX_THRES2_DB;
     }
     
-    if ((AH_PRIVATE(ah)->ah_config.ath_hal_sta_update_tx_pwr_enable_S1) 
+    if ((ah->ah_config.ath_hal_sta_update_tx_pwr_enable_S1) 
         && (rssi > tmp_rss1_thr1)) 
     {
         if (old_greentx_status != HAL_RSSI_TX_POWER_SHORT) {
-            AH_PRIVATE(ah)->green_tx_status = HAL_RSSI_TX_POWER_SHORT;
+            AH9300(ah)->green_tx_status = HAL_RSSI_TX_POWER_SHORT;
         }
-    } else if (AH_PRIVATE(ah)->ah_config.ath_hal_sta_update_tx_pwr_enable_S2 
+    } else if (ah->ah_config.ath_hal_sta_update_tx_pwr_enable_S2 
         && (rssi > tmp_rss1_thr2)) 
     {
         if (old_greentx_status != HAL_RSSI_TX_POWER_MIDDLE) {
-            AH_PRIVATE(ah)->green_tx_status = HAL_RSSI_TX_POWER_MIDDLE;
+            AH9300(ah)->green_tx_status = HAL_RSSI_TX_POWER_MIDDLE;
         }
-    } else if (AH_PRIVATE(ah)->ah_config.ath_hal_sta_update_tx_pwr_enable_S3) {
+    } else if (ah->ah_config.ath_hal_sta_update_tx_pwr_enable_S3) {
         if (old_greentx_status != HAL_RSSI_TX_POWER_LONG) {
-            AH_PRIVATE(ah)->green_tx_status = HAL_RSSI_TX_POWER_LONG;
+            AH9300(ah)->green_tx_status = HAL_RSSI_TX_POWER_LONG;
         }
     }
 
     /* If status is not change, don't do anything */
-    if (old_greentx_status == AH_PRIVATE(ah)->green_tx_status) {
+    if (old_greentx_status == AH9300(ah)->green_tx_status) {
         return;
     }
     
     /* for Poseidon which ath_hal_sta_update_tx_pwr_enable is enabled */
-    if ((AH_PRIVATE(ah)->green_tx_status != HAL_RSSI_TX_POWER_NONE) 
+    if ((AH9300(ah)->green_tx_status != HAL_RSSI_TX_POWER_NONE) 
         && AR_SREV_POSEIDON(ah)) 
     {
         if (ahp->ah_hw_green_tx_enable) {
-            switch (AH_PRIVATE(ah)->green_tx_status) {
+            switch (AH9300(ah)->green_tx_status) {
             case HAL_RSSI_TX_POWER_SHORT:
                 /* 1. TxPower Config */
                 OS_MEMCPY(target_power_val_t, ar9485_hw_gtx_tp_distance_short,
@@ -2767,14 +2792,14 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
                 /* 2. Store OB/DB1/DB2 */
                 /* 3. Store TPC settting */
                 temp_tcp_reg_val = 
-                    AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_TPC];
+                    AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_TPC];
                 /* 4. Store BB_powertx_rate9 value */
                 temp_powertx_rate9_reg_val = 
-                  AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_BB_PWRTX_RATE9];
+                  AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_BB_PWRTX_RATE9];
                 break;
             }
         } else {
-            switch (AH_PRIVATE(ah)->green_tx_status) {
+            switch (AH9300(ah)->green_tx_status) {
             case HAL_RSSI_TX_POWER_SHORT:
                 /* 1. TxPower Config */
                 OS_MEMCPY(target_power_val_t, wb225_sw_gtx_tp_distance_short,
@@ -2785,7 +2810,7 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
                     wb225_gtx_olpc_cal_offset[WB225_OB_CALIBRATION_VALUE];
                 /* 2. Store OB/DB */
                 temp_obdb_reg_val =
-                    AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
+                    AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
                 temp_obdb_reg_val &= ~(AR_PHY_65NM_CH0_TXRF2_DB2G | 
                                        AR_PHY_65NM_CH0_TXRF2_OB2G_CCK |
                                        AR_PHY_65NM_CH0_TXRF2_OB2G_PSK |
@@ -2816,7 +2841,7 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
                     wb225_gtx_olpc_cal_offset[WB225_OB_CALIBRATION_VALUE];
                 /* 2. Store OB/DB */
                 temp_obdb_reg_val =
-                    AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
+                    AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
                 temp_obdb_reg_val &= ~(AR_PHY_65NM_CH0_TXRF2_DB2G | 
                                        AR_PHY_65NM_CH0_TXRF2_OB2G_CCK |
                                        AR_PHY_65NM_CH0_TXRF2_OB2G_PSK |
@@ -2848,19 +2873,19 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
                     wb225_gtx_olpc_cal_offset[WB225_OB_CALIBRATION_VALUE];
                 /* 2. Store OB/DB1/DB2 */
                 temp_obdb_reg_val =
-                    AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
+                    AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_OBDB];
                 /* 3. Store TPC settting */
                 temp_tcp_reg_val =
-                    AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_TPC];
+                    AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_TPC];
                 /* 4. Store BB_powertx_rate9 value */
                 temp_powertx_rate9_reg_val = 
-                  AH_PRIVATE(ah)->ah_ob_db1[POSEIDON_STORED_REG_BB_PWRTX_RATE9];
+                  AH9300(ah)->ah_ob_db1[POSEIDON_STORED_REG_BB_PWRTX_RATE9];
                 break;
             }
         }
         /* 1.1 Do OLPC Delta Calibration Offset */
         tmp_olpc_val = 
-            (int8_t) AH_PRIVATE(ah)->ah_db2[POSEIDON_STORED_REG_G2_OLPC_OFFSET];
+            (int8_t) AH9300(ah)->ah_db2[POSEIDON_STORED_REG_G2_OLPC_OFFSET];
         tmp_olpc_val += olpc_power_offset;
         OS_REG_RMW(ah, AR_PHY_TPC_11_B0, 
             (tmp_olpc_val << AR_PHY_TPC_OLPC_GAIN_DELTA_S), 
@@ -2879,6 +2904,7 @@ void ar9300_chk_rssi_update_tx_pwr(struct ath_hal *ah, int rssi)
     }
 }
 
+#if 0
 void
 ar9300_get_vow_stats(
     struct ath_hal *ah, HAL_VOWSTATS* p_stats, u_int8_t vow_reg_flags)
@@ -2899,19 +2925,21 @@ ar9300_get_vow_stats(
         p_stats->ext_cycle_count   = OS_REG_READ(ah, AR_EXTRCCNT);
     }
 }
+#endif
+
 /*
  * ar9300_is_skip_paprd_by_greentx
  *
  * This function check if we need to skip PAPRD tuning 
  * when GreenTx in specific state.
  */
-HAL_BOOL 
+HAL_BOOL
 ar9300_is_skip_paprd_by_greentx(struct ath_hal *ah)
 {
     if (AR_SREV_POSEIDON(ah) && 
-        AH_PRIVATE(ah)->ah_config.ath_hal_sta_update_tx_pwr_enable &&
-        ((AH_PRIVATE(ah)->green_tx_status == HAL_RSSI_TX_POWER_SHORT) || 
-         (AH_PRIVATE(ah)->green_tx_status == HAL_RSSI_TX_POWER_MIDDLE))) 
+        ah->ah_config.ath_hal_sta_update_tx_pwr_enable &&
+        ((AH9300(ah)->green_tx_status == HAL_RSSI_TX_POWER_SHORT) || 
+         (AH9300(ah)->green_tx_status == HAL_RSSI_TX_POWER_MIDDLE))) 
     {
         return AH_TRUE;
     }
@@ -3011,7 +3039,7 @@ ar9300_print_keycache(struct ath_hal *ah)
 
     ath_hal_printf(ah, "Slot   Key\t\t\t          Valid  Type  Mac  \n");
 
-    for (entry = 0 ; entry < p_cap->hal_key_cache_size; entry++) {
+    for (entry = 0 ; entry < p_cap->halKeyCacheSize; entry++) {
         key0 = OS_REG_READ(ah, AR_KEYTABLE_KEY0(entry));
         key1 = OS_REG_READ(ah, AR_KEYTABLE_KEY1(entry));
         key2 = OS_REG_READ(ah, AR_KEYTABLE_KEY2(entry));
@@ -3061,7 +3089,8 @@ ar9300_print_keycache(struct ath_hal *ah)
 }
 
 /* enable/disable smart antenna mode */
-HAL_BOOL ar9300_set_smart_antenna(struct ath_hal *ah, HAL_BOOL enable)
+HAL_BOOL
+ar9300_set_smart_antenna(struct ath_hal *ah, HAL_BOOL enable)
 {
     struct ath_hal_9300 *ahp = AH9300(ah);
     if (enable) {
@@ -3075,7 +3104,7 @@ HAL_BOOL ar9300_set_smart_antenna(struct ath_hal *ah, HAL_BOOL enable)
 
 #ifdef ATH_TX99_DIAG
 #ifndef ATH_SUPPORT_HTC
-void 
+void
 ar9300_tx99_channel_pwr_update(struct ath_hal *ah, HAL_CHANNEL *c, 
     u_int32_t txpower)
 {
@@ -3648,5 +3677,3 @@ ar9300SetDfs3StreamFix(struct ath_hal *ah, u_int32_t val)
 {
    return AH_FALSE;
 }
-
-#endif /* AH_SUPPORT_AR9300 */

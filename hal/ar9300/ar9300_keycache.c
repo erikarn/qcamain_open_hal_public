@@ -10,13 +10,11 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300reg.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300reg.h"
 
 /*
  * Note: The key cache hardware requires that each double-word
@@ -30,12 +28,25 @@
     (AH9300(ah)->ah_sta_id1_defaults & AR_STA_ID1_CRPT_MIC_ENABLE)
 
 /*
+ * This isn't the keytable type; this is actually something separate
+ * for the TX descriptor.
+ */
+static const int keyType[] = {
+	1,	/* HAL_CIPHER_WEP */
+	0,	/* HAL_CIPHER_AES_OCB */
+	2,	/* HAL_CIPHER_AES_CCM */
+	0,	/* HAL_CIPHER_CKIP */
+	3,	/* HAL_CIPHER_TKIP */
+	0	/* HAL_CIPHER_CLR */
+};
+
+/*
  * Return the size of the hardware key cache.
  */
 u_int32_t
 ar9300_get_key_cache_size(struct ath_hal *ah)
 {
-    return AH_PRIVATE(ah)->ah_caps.hal_key_cache_size;
+    return AH_PRIVATE(ah)->ah_caps.halKeyCacheSize;
 }
 
 /*
@@ -44,7 +55,7 @@ ar9300_get_key_cache_size(struct ath_hal *ah)
 HAL_BOOL
 ar9300_is_key_cache_entry_valid(struct ath_hal *ah, u_int16_t entry)
 {
-    if (entry < AH_PRIVATE(ah)->ah_caps.hal_key_cache_size) {
+    if (entry < AH_PRIVATE(ah)->ah_caps.halKeyCacheSize) {
         u_int32_t val = OS_REG_READ(ah, AR_KEYTABLE_MAC1(entry));
         if (val & AR_KEYTABLE_VALID) {
             return AH_TRUE;
@@ -62,11 +73,14 @@ ar9300_reset_key_cache_entry(struct ath_hal *ah, u_int16_t entry)
     u_int32_t key_type;
     struct ath_hal_9300 *ahp = AH9300(ah);
 
-    if (entry >= AH_PRIVATE(ah)->ah_caps.hal_key_cache_size) {
+    if (entry >= AH_PRIVATE(ah)->ah_caps.halKeyCacheSize) {
         HALDEBUG(ah, HAL_DEBUG_KEYCACHE,
             "%s: entry %u out of range\n", __func__, entry);
         return AH_FALSE;
     }
+
+    ahp->ah_keytype[entry] = keyType[HAL_CIPHER_CLR];
+
     key_type = OS_REG_READ(ah, AR_KEYTABLE_TYPE(entry));
 
     /* XXX why not clear key type/valid bit first? */
@@ -81,7 +95,7 @@ ar9300_reset_key_cache_entry(struct ath_hal *ah, u_int16_t entry)
     if (key_type == AR_KEYTABLE_TYPE_TKIP && IS_MIC_ENABLED(ah)) {
         u_int16_t micentry = entry + 64;  /* MIC goes at slot+64 */
 
-        HALASSERT(micentry < AH_PRIVATE(ah)->ah_caps.hal_key_cache_size);
+        HALASSERT(micentry < AH_PRIVATE(ah)->ah_caps.halKeyCacheSize);
         OS_REG_WRITE(ah, AR_KEYTABLE_KEY0(micentry), 0);
         OS_REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), 0);
         OS_REG_WRITE(ah, AR_KEYTABLE_KEY2(micentry), 0);
@@ -124,7 +138,7 @@ ar9300_set_key_cache_entry_mac(
     u_int32_t mac_hi, mac_lo;
     u_int32_t unicast_addr = AR_KEYTABLE_VALID;
 
-    if (entry >= AH_PRIVATE(ah)->ah_caps.hal_key_cache_size) {
+    if (entry >= AH_PRIVATE(ah)->ah_caps.halKeyCacheSize) {
         HALDEBUG(ah, HAL_DEBUG_KEYCACHE,
             "%s: entry %u out of range\n", __func__, entry);
         return AH_FALSE;
@@ -180,7 +194,7 @@ ar9300_set_key_cache_entry(struct ath_hal *ah, u_int16_t entry,
     int is_proxysta_key = k->kv_type & HAL_KEY_PROXY_STA_MASK;
 
 
-    if (entry >= p_cap->hal_key_cache_size) {
+    if (entry >= p_cap->halKeyCacheSize) {
         HALDEBUG(ah, HAL_DEBUG_KEYCACHE,
             "%s: entry %u out of range\n", __func__, entry);
         return AH_FALSE;
@@ -194,7 +208,7 @@ ar9300_set_key_cache_entry(struct ath_hal *ah, u_int16_t entry,
         key_type = AR_KEYTABLE_TYPE_AES;
         break;
     case HAL_CIPHER_AES_CCM:
-        if (!p_cap->hal_cipher_aes_ccm_support) {
+        if (!p_cap->halCipherAesCcmSupport) {
             HALDEBUG(ah, HAL_DEBUG_KEYCACHE, "%s: AES-CCM not supported by "
                 "mac rev 0x%x\n",
                 __func__, AH_PRIVATE(ah)->ah_macRev);
@@ -204,7 +218,7 @@ ar9300_set_key_cache_entry(struct ath_hal *ah, u_int16_t entry,
         break;
     case HAL_CIPHER_TKIP:
         key_type = AR_KEYTABLE_TYPE_TKIP;
-        if (IS_MIC_ENABLED(ah) && entry + 64 >= p_cap->hal_key_cache_size) {
+        if (IS_MIC_ENABLED(ah) && entry + 64 >= p_cap->halKeyCacheSize) {
             HALDEBUG(ah, HAL_DEBUG_KEYCACHE,
                 "%s: entry %u inappropriate for TKIP\n",
                 __func__, entry);
@@ -253,7 +267,7 @@ ar9300_set_key_cache_entry(struct ath_hal *ah, u_int16_t entry,
     orig_key_type = key_type;
     if (is_proxysta_key) {
         u_int8_t bcast_mac[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-        if (mac && !adf_os_mem_cmp(mac, bcast_mac, 6)) {
+        if (mac && ! OS_MEMCMP(mac, bcast_mac, 6)) {
             key_type &= ~AR_KEYTABLE_DIR_ACK_BIT;
         } else {
             key_type |= AR_KEYTABLE_DIR_ACK_BIT;
@@ -360,6 +374,11 @@ ar9300_set_key_cache_entry(struct ath_hal *ah, u_int16_t entry,
         ar9300_set_key_cache_entry_mac(ah, entry, mac);
     }
 
+    ahp->ah_keytype[entry] = keyType[k->kv_type];
+    HALDEBUG(ah, HAL_DEBUG_KEYCACHE, "%s: entry=%d, k->kv_type=%d,"
+      "keyType=%d\n", __func__, entry, k->kv_type, keyType[k->kv_type]);
+
+
     if (AH_PRIVATE(ah)->ah_curchan == AH_NULL) {
         return AH_TRUE;
     }
@@ -414,5 +433,3 @@ void ar9300_dump_keycache(struct ath_hal *ah, int n, u_int32_t *entry)
     }
 #undef AH_KEY_REG_SIZE
 }
-
-#endif /* AH_SUPPORT_AR9300 */

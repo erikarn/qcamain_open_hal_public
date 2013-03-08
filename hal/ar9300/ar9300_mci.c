@@ -1625,7 +1625,7 @@ ar9300_mci_state(struct ath_hal *ah, u_int32_t state_type, u_int32_t *p_data)
                 value = 0;
             }
             if (p_data != NULL) {
-                ahp->ah_mci_need_flush_btinfo = (*p_data != 0)?true:false;
+                ahp->ah_mci_need_flush_btinfo = (*p_data != 0)? AH_TRUE : AH_FALSE;
             }
             break;
 

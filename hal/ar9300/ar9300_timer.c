@@ -10,14 +10,12 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300reg.h"
-#include "ar9300/ar9300desc.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300reg.h"
+#include "ar9003/ar9300desc.h"
 
 typedef struct gen_timer_configuation {
     u_int32_t   next_addr;
@@ -175,5 +173,3 @@ ar9300_get_gen_timer_interrupts(
     *trigger = ahp->ah_intr_gen_timer_trigger;
     *thresh = ahp->ah_intr_gen_timer_thresh;
 }
-
-#endif /* AH_SUPPORT_AR9300 */

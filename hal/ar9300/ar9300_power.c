@@ -10,13 +10,11 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300reg.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300reg.h"
 
 #if ATH_WOW_OFFLOAD
 void ar9300_wowoffload_prep(struct ath_hal *ah)
@@ -597,7 +595,7 @@ ar9300_set_power_mode_network_sleep(struct ath_hal *ah, int set_chip)
     if (set_chip) {
         HAL_CAPABILITIES *p_cap = &AH_PRIVATE(ah)->ah_caps;
 
-        if (! p_cap->hal_auto_sleep_support) {
+        if (! p_cap->halAutoSleepSupport) {
             /* Set wake_on_interrupt bit; clear force_wake bit */
             OS_REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_ON_INT);
         }
@@ -1045,7 +1043,7 @@ ar9300_wow_enable(
          * PCI-E reset. We also need to tie the PCI-E Phy reset to the PCI-E
          * reset.
          */
-        HALDEBUG(AH_NULL, HAL_DEBUG_UNMASKABLE,
+        HAL_DEBUG(AH_NULL, HAL_DEBUG_UNMASKABLE,
             "%s: Untie POR and PCIE reset\n", __func__);
         wa_reg_val = OS_REG_READ(ah, AR_HOSTIF_REG(ah, AR_WA));
         wa_reg_val = wa_reg_val & ~(AR_WA_UNTIE_RESET_EN);
@@ -1355,7 +1353,6 @@ ar9300_wow_enable(
     OS_REG_WRITE(ah, AR_STA_ID1, 
                      OS_REG_READ(ah, AR_STA_ID1) & ~AR_STA_ID1_PRESERVE_SEQNUM);
 
-
     AH_PRIVATE(ah)->ah_wow_event_mask = wow_event_mask;
 
 #if ATH_WOW_OFFLOAD
@@ -1549,5 +1546,3 @@ ar9300_wow_set_gpio_reset_low(struct ath_hal *ah)
     /* val = OS_REG_READ(ah,AR_GPIO_IN_OUT ); */
 }
 #endif /* ATH_WOW */
-
-#endif /* AH_SUPPORT_AR9300 */

@@ -10,8 +10,6 @@
 
 #include "opt_ah.h"
 
-#ifdef AH_SUPPORT_AR9300
-
 #include "ah.h"
 #include "ah_internal.h"
 #include "ah_devid.h"
@@ -19,9 +17,9 @@
 #include "ah_desc.h"                    /* NB: for HAL_PHYERR* */
 #endif
 
-#include "ar9300/ar9300.h"
-#include "ar9300/ar9300reg.h"
-#include "ar9300/ar9300phy.h"
+#include "ar9003/ar9300.h"
+#include "ar9003/ar9300reg.h"
+#include "ar9003/ar9300phy.h"
 
 #define AR_GPIO_BIT(_gpio)                      (1 << (_gpio))
 
@@ -106,7 +104,7 @@ HAL_BOOL
 ar9300_gpio_cfg_output(
     struct ath_hal *ah,
     u_int32_t gpio,
-    HAL_GPIO_OUTPUT_MUX_TYPE hal_signal_type)
+    HAL_GPIO_MUX_TYPE hal_signal_type)
 {
     u_int32_t    ah_signal_type;
     u_int32_t    gpio_shift;
@@ -149,7 +147,7 @@ ar9300_gpio_cfg_output(
         AR_GPIO_OUTPUT_MUX_AS_SMARTANT_CTRL2
     };
 
-    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
+    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.halNumGpioPins);
     if ((gpio == AR9382_GPIO_PIN_8_RESERVED)  ||
         (gpio == AR9382_GPIO_PIN_11_RESERVED) ||
         (gpio == AR9382_GPIO_9_INPUT_ONLY))
@@ -223,7 +221,7 @@ HAL_BOOL
 ar9300_gpio_cfg_output_led_off(
     struct ath_hal *ah,
     u_int32_t gpio,
-    HAL_GPIO_OUTPUT_MUX_TYPE halSignalType)
+    HAL_GPIO_MUX_TYPE halSignalType)
 {
 #define N(a)    (sizeof(a) / sizeof(a[0]))
     u_int32_t    ah_signal_type;
@@ -328,7 +326,7 @@ ar9300_gpio_cfg_input(struct ath_hal *ah, u_int32_t gpio)
 {
     u_int32_t    gpio_shift;
 
-    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
+    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.halNumGpioPins);
     if ((gpio == AR9382_GPIO_PIN_8_RESERVED)  ||
         (gpio == AR9382_GPIO_PIN_11_RESERVED) ||
         (gpio > AR9382_MAX_GPIO_INPUT_PIN_NUM))
@@ -358,7 +356,7 @@ ar9300_gpio_cfg_input(struct ath_hal *ah, u_int32_t gpio)
 HAL_BOOL
 ar9300_gpio_set(struct ath_hal *ah, u_int32_t gpio, u_int32_t val)
 {
-    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
+    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.halNumGpioPins);
     if ((gpio == AR9382_GPIO_PIN_8_RESERVED)  ||
         (gpio == AR9382_GPIO_PIN_11_RESERVED) ||
         (gpio == AR9382_GPIO_9_INPUT_ONLY))
@@ -378,7 +376,7 @@ u_int32_t
 ar9300_gpio_get(struct ath_hal *ah, u_int32_t gpio)
 {
     u_int32_t gpio_in;
-    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
+    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.halNumGpioPins);
     if ((gpio == AR9382_GPIO_PIN_8_RESERVED) ||
         (gpio == AR9382_GPIO_PIN_11_RESERVED))
     {
@@ -432,7 +430,7 @@ ar9300_gpio_set_intr(struct ath_hal *ah, u_int gpio, u_int32_t ilevel)
     shifts[1] = AR_INTR_SYNC_MASK_GPIO_S;
 #endif
 
-    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
+    HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.halNumGpioPins);
 
     if ((gpio == AR9382_GPIO_PIN_8_RESERVED) ||
         (gpio == AR9382_GPIO_PIN_11_RESERVED) ||
@@ -442,9 +440,8 @@ ar9300_gpio_set_intr(struct ath_hal *ah, u_int gpio, u_int32_t ilevel)
     }
 
 #ifdef AH_ASSERT
-    gpio_mask = (1 << AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins) - 1;
+    gpio_mask = (1 << AH_PRIVATE(ah)->ah_caps.halNumGpioPins) - 1;
 #endif
-
     if (ilevel == HAL_GPIO_INTR_DISABLE) {
         /* clear this GPIO's bit in the interrupt registers */
         for (i = 0; i < ARRAY_LENGTH(regs); i++) {
@@ -503,7 +500,7 @@ ar9300_gpio_set_polarity(struct ath_hal *ah, u_int32_t pol_map,
 {
     u_int32_t gpio_mask;
 
-    gpio_mask = (1 << AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins) - 1;
+    gpio_mask = (1 << AH_PRIVATE(ah)->ah_caps.halNumGpioPins) - 1;
     OS_REG_WRITE(ah, AR_HOSTIF_REG(ah, AR_GPIO_INTR_POL), gpio_mask & pol_map);
 
 #ifndef ATH_GPIO_USE_ASYNC_CAUSE
@@ -628,5 +625,3 @@ void ar9300_gpio_show(struct ath_hal *ah)
 
 }
 #endif /*AH_DEBUG*/
-
-#endif  /* AH_SUPPORT_AR9300 */
