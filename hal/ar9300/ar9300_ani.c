@@ -172,24 +172,23 @@ static int
 ar9300_get_ani_channel_index(struct ath_hal *ah,
   const struct ieee80211_channel *chan)
 {
-#if 0
     struct ath_hal_9300 *ahp = AH9300(ah);
     int i;
 
     for (i = 0; i < ARRAY_LENGTH(ahp->ah_ani); i++) {
-        if (ahp->ah_ani[i].c.channel == chan->channel) {
+        /* XXX this doesn't distinguish between 20/40 channels */
+        if (ahp->ah_ani[i].c.ic_freq == chan->ic_freq) {
             return i;
         }
-        if (ahp->ah_ani[i].c.channel == 0) {
-            ahp->ah_ani[i].c.channel = chan->channel;
-            ahp->ah_ani[i].c.channel_flags = chan->channel_flags;
+        if (ahp->ah_ani[i].c.ic_freq == 0) {
+            ahp->ah_ani[i].c.ic_freq = chan->ic_freq;
+            ahp->ah_ani[i].c.ic_flags = chan->ic_flags;
             return i;
         }
     }
     /* XXX statistic */
     HALDEBUG(ah, HAL_DEBUG_UNMASKABLE,
         "%s: No more channel states left. Using channel 0\n", __func__);
-#endif
     return 0;        /* XXX gotta return something valid */
 }
 
