@@ -36,6 +36,17 @@
 static HAL_BOOL ar9300ClrMulticastFilterIndex(struct ath_hal *ah, uint32_t ix);
 static HAL_BOOL ar9300SetMulticastFilterIndex(struct ath_hal *ah, uint32_t ix);
 
+static void
+ar9300SetChainMasks(struct ath_hal *ah, uint32_t tx_chainmask,
+    uint32_t rx_chainmask)
+{
+
+	AH9300(ah)->ah_tx_chainmask =
+	    tx_chainmask & AH_PRIVATE(ah)->ah_caps.halTxChainMask;
+	AH9300(ah)->ah_rx_chainmask =
+	    rx_chainmask & AH_PRIVATE(ah)->ah_caps.halRxChainMask;
+}
+
 void
 ar9300_attach_freebsd_ops(struct ath_hal *ah)
 {
@@ -205,6 +216,7 @@ ar9300_attach_freebsd_ops(struct ath_hal *ah)
 	ah->ah_set11nBurstDuration = ar9300_set_11n_burst_duration;
 	/* ah_get11nExtBusy */
 	ah->ah_set11nMac2040 = ar9300_set_11n_mac2040;
+	ah->ah_setChainMasks = ar9300SetChainMasks;
 	/* ah_get11nRxClear */
 	/* ah_set11nRxClear */
 }
@@ -607,4 +619,5 @@ ar9300SetMulticastFilterIndex(struct ath_hal *ah, uint32_t ix)
         }
         return AH_TRUE;
 }
+
 
