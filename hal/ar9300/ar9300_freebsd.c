@@ -280,7 +280,7 @@ HAL_BOOL
 ar9300_stop_tx_dma_freebsd(struct ath_hal *ah, u_int q)
 {
 
-    return ar9300_stop_tx_dma(ah, q, 1000);
+	return ar9300_stop_tx_dma(ah, q, 1000);
 }
 
 void
@@ -586,18 +586,18 @@ ar9300_freebsd_get_dfs_default_thresh(struct ath_hal *ah,
 static HAL_BOOL
 ar9300ClrMulticastFilterIndex(struct ath_hal *ah, uint32_t ix)
 {
-        uint32_t val;
+	uint32_t val;
 
-        if (ix >= 64)
-                return AH_FALSE;
-        if (ix >= 32) {
-                val = OS_REG_READ(ah, AR_MCAST_FIL1);
-                OS_REG_WRITE(ah, AR_MCAST_FIL1, (val &~ (1<<(ix-32))));
-        } else {
-                val = OS_REG_READ(ah, AR_MCAST_FIL0);
-                OS_REG_WRITE(ah, AR_MCAST_FIL0, (val &~ (1<<ix)));
-        }
-        return AH_TRUE;
+	if (ix >= 64)
+		return (AH_FALSE);
+	if (ix >= 32) {
+		val = OS_REG_READ(ah, AR_MCAST_FIL1);
+		OS_REG_WRITE(ah, AR_MCAST_FIL1, (val &~ (1<<(ix-32))));
+	} else {
+		val = OS_REG_READ(ah, AR_MCAST_FIL0);
+		OS_REG_WRITE(ah, AR_MCAST_FIL0, (val &~ (1<<ix)));
+	}
+	return AH_TRUE;
 }
 
 /*
@@ -606,18 +606,16 @@ ar9300ClrMulticastFilterIndex(struct ath_hal *ah, uint32_t ix)
 static HAL_BOOL
 ar9300SetMulticastFilterIndex(struct ath_hal *ah, uint32_t ix)
 {
-        uint32_t val;
+	uint32_t val;
 
-        if (ix >= 64)
-                return AH_FALSE;
-        if (ix >= 32) {
-                val = OS_REG_READ(ah, AR_MCAST_FIL1);
-                OS_REG_WRITE(ah, AR_MCAST_FIL1, (val | (1<<(ix-32))));
-        } else {
-                val = OS_REG_READ(ah, AR_MCAST_FIL0);
-                OS_REG_WRITE(ah, AR_MCAST_FIL0, (val | (1<<ix)));
-        }
-        return AH_TRUE;
+	if (ix >= 64)
+		return (AH_FALSE);
+	if (ix >= 32) {
+		val = OS_REG_READ(ah, AR_MCAST_FIL1);
+		OS_REG_WRITE(ah, AR_MCAST_FIL1, (val | (1<<(ix-32))));
+	} else {
+		val = OS_REG_READ(ah, AR_MCAST_FIL0);
+		OS_REG_WRITE(ah, AR_MCAST_FIL0, (val | (1<<ix)));
+	}
+	return (AH_TRUE);
 }
-
-
