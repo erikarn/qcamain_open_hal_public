@@ -22,13 +22,12 @@
 #include "ah_internal.h"
 #include "ah_devid.h"
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
 
-#include "ar9003/ar9300_stub.h"
-
-#include "ar9003/ar9300_stub_funcs.h"
+#include "ar9300/ar9300_stub.h"
+#include "ar9300/ar9300_stub_funcs.h"
 
 void
 ar9300_set_stub_functions(struct ath_hal *ah)

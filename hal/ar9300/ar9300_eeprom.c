@@ -16,20 +16,20 @@
 #ifdef AH_DEBUG
 #include "ah_desc.h"                    /* NB: for HAL_PHYERR* */
 #endif
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300eep.h"
-#include "ar9003/ar9300template_generic.h"
-#include "ar9003/ar9300template_xb112.h"
-#include "ar9003/ar9300template_hb116.h"
-#include "ar9003/ar9300template_xb113.h"
-#include "ar9003/ar9300template_hb112.h"
-#include "ar9003/ar9300template_ap121.h"
-#include "ar9003/ar9300template_osprey_k31.h"
-#include "ar9003/ar9300template_wasp_2.h"
-#include "ar9003/ar9300template_wasp_k31.h"
-#include "ar9003/ar9300template_aphrodite.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300eep.h"
+#include "ar9300/ar9300template_generic.h"
+#include "ar9300/ar9300template_xb112.h"
+#include "ar9300/ar9300template_hb116.h"
+#include "ar9300/ar9300template_xb113.h"
+#include "ar9300/ar9300template_hb112.h"
+#include "ar9300/ar9300template_ap121.h"
+#include "ar9300/ar9300template_osprey_k31.h"
+#include "ar9300/ar9300template_wasp_2.h"
+#include "ar9300/ar9300template_wasp_k31.h"
+#include "ar9300/ar9300template_aphrodite.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
 
 
 

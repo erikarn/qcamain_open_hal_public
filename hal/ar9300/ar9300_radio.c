@@ -13,9 +13,9 @@
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
 
 /* chansel table, used by Hornet and Poseidon */
 static const u_int32_t ar9300_chansel_xtal_25M[] = {

@@ -13,8 +13,8 @@
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
 
 #if ATH_WOW_OFFLOAD
 void ar9300_wowoffload_prep(struct ath_hal *ah)

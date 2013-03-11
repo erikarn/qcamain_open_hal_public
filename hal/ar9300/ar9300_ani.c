@@ -15,9 +15,9 @@
 #include "ah_desc.h"
 //#include "ah_pktlog.h"
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
 
 extern  void ar9300_set_rx_filter(struct ath_hal *ah, u_int32_t bits);
 extern  u_int32_t ar9300_get_rx_filter(struct ath_hal *ah);

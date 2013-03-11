@@ -14,32 +14,32 @@
 #include "ah_internal.h"
 #include "ah_devid.h"
 
-#include "ar9003/ar9300desc.h"
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
-#include "ar9003/ar9300paprd.h"
+#include "ar9300/ar9300desc.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
+#include "ar9300/ar9300paprd.h"
 
-#include "ar9003/ar9300_stub.h"
-#include "ar9003/ar9300_stub_funcs.h"
+#include "ar9300/ar9300_stub.h"
+#include "ar9300/ar9300_stub_funcs.h"
 
 
 /* Add static register initialization vectors */
-#include "ar9003/ar9300_osprey22.ini"
-#include "ar9003/ar9330_11.ini"
-#include "ar9003/ar9330_12.ini"
-#include "ar9003/ar9340.ini"
-#include "ar9003/ar9485.ini"
-#include "ar9003/ar9485_1_1.ini"
-#include "ar9003/ar9300_jupiter10.ini"
-#include "ar9003/ar9300_jupiter20.ini"
-#include "ar9003/ar9580.ini"
-#include "ar9003/ar955x.ini"
-#include "ar9003/ar9300_aphrodite10.ini"
+#include "ar9300/ar9300_osprey22.ini"
+#include "ar9300/ar9330_11.ini"
+#include "ar9300/ar9330_12.ini"
+#include "ar9300/ar9340.ini"
+#include "ar9300/ar9485.ini"
+#include "ar9300/ar9485_1_1.ini"
+#include "ar9300/ar9300_jupiter10.ini"
+#include "ar9300/ar9300_jupiter20.ini"
+#include "ar9300/ar9580.ini"
+#include "ar9300/ar955x.ini"
+#include "ar9300/ar9300_aphrodite10.ini"
 
 
 /* Include various freebsd specific HAL methods */
-#include "ar9003/ar9300_freebsd.h"
+#include "ar9300/ar9300_freebsd.h"
 
 /* XXX duplicate in ar9300_radio.c ? */
 static HAL_BOOL ar9300_get_chip_power_limits(struct ath_hal *ah,

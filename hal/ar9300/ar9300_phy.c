@@ -13,7 +13,7 @@
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9003/ar9300.h"
+#include "ar9300/ar9300.h"
 
 /* shorthands to compact tables for readability */
 #define    OFDM    IEEE80211_T_OFDM

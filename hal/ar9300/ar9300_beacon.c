@@ -13,8 +13,8 @@
 #include "ah.h"
 #include "ah_internal.h"
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
 
 #define TU_TO_USEC(_tu) ((_tu) << 10)
 #define	ONE_EIGHTH_TU_TO_USEC(_tu8) ((_tu8) << 7)

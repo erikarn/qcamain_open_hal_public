@@ -17,9 +17,9 @@
 #include "ah_desc.h"                    /* NB: for HAL_PHYERR* */
 #endif
 
-#include "ar9003/ar9300.h"
-#include "ar9003/ar9300reg.h"
-#include "ar9003/ar9300phy.h"
+#include "ar9300/ar9300.h"
+#include "ar9300/ar9300reg.h"
+#include "ar9300/ar9300phy.h"
 
 
 void
