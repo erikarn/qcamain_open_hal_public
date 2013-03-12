@@ -850,7 +850,7 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
          *
          * Bug fixed in AR9580/Peacock, Wasp1.1 and later
          */
-        if ((ahp->ah_enterprise_mode && AR_ENT_OTP_MIN_PKT_SIZE_DISABLE) && 
+        if ((ahp->ah_enterprise_mode & AR_ENT_OTP_MIN_PKT_SIZE_DISABLE) &&
                 !AR_SREV_AR9580_10_OR_LATER(ah) && (!AR_SREV_WASP(ah) ||
                 AR_SREV_WASP_10(ah))) {
             *result |= AH_ENT_RTSCTS_DELIM_WAR;
