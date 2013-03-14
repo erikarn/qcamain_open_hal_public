@@ -156,7 +156,7 @@ ar9300_gpio_cfg_output(
     }
 
     /* Convert HAL signal type definitions to hardware-specific values. */
-    if (hal_signal_type < ARRAY_LENGTH(mux_signal_conversion_table))
+    if ((int) hal_signal_type < ARRAY_LENGTH(mux_signal_conversion_table))
     {
         ah_signal_type = mux_signal_conversion_table[hal_signal_type];
     } else {
@@ -268,7 +268,7 @@ ar9300_gpio_cfg_output_led_off(
     HALASSERT(gpio < AH_PRIVATE(ah)->ah_caps.hal_num_gpio_pins);
 
     /* Convert HAL signal type definitions to hardware-specific values. */
-    if (halSignalType < ARRAY_LENGTH(mux_signal_conversion_table))
+    if ((int) halSignalType < ARRAY_LENGTH(mux_signal_conversion_table))
     {
         ah_signal_type = mux_signal_conversion_table[halSignalType];
     } else {

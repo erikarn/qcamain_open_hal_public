@@ -3273,7 +3273,7 @@ ar9300_init_cal_internal(struct ath_hal *ah, struct ieee80211_channel *chan,
 {
     struct ath_hal_9300 *ahp = AH9300(ah);
     HAL_BOOL txiqcal_success_flag = AH_FALSE;
-    HAL_BOOL cal_done;
+    HAL_BOOL cal_done = AH_FALSE;
     int iqcal_idx = 0;
     HAL_BOOL do_sep_iq_cal = AH_FALSE;
     HAL_BOOL do_agc_cal = do_rtt_cal;
