@@ -2680,9 +2680,27 @@ ar9300_process_ini(struct ath_hal *ah, struct ieee80211_channel *chan,
     /* FreeBSD */
     if (IS_CHAN_5GHZ(ichan)) {
         if (IEEE80211_IS_CHAN_HT40U(chan) || IEEE80211_IS_CHAN_HT40D(chan)) {
+            if (AR_SREV_SCORPION(ah)){
+                if (ichan->channel <= 5350){
+                    modes_txgaintable_index = 2;
+                }else if ((ichan->channel > 5350) && (ichan->channel <= 5600)){
+                    modes_txgaintable_index = 4;
+                }else if (ichan->channel > 5600){
+                    modes_txgaintable_index = 6;
+                }
+            }
             modes_index = 2;
             freq_index = 1;
         } else if (IEEE80211_IS_CHAN_A(chan) || IEEE80211_IS_CHAN_HT20(chan)) {
+            if (AR_SREV_SCORPION(ah)){
+                if (ichan->channel <= 5350){
+                    modes_txgaintable_index = 1;
+                }else if ((ichan->channel > 5350) && (ichan->channel <= 5600)){
+                    modes_txgaintable_index = 3;
+                }else if (ichan->channel > 5600){
+                    modes_txgaintable_index = 5;
+                }
+            }
             modes_index = 1;
             freq_index = 1;
         } else
@@ -2692,9 +2710,15 @@ ar9300_process_ini(struct ath_hal *ah, struct ieee80211_channel *chan,
             modes_index = 5;
             freq_index = 2;
         } else if (IEEE80211_IS_CHAN_HT40U(chan) || IEEE80211_IS_CHAN_HT40D(chan)) {
+            if (AR_SREV_SCORPION(ah)){
+                modes_txgaintable_index = 7;
+            }
             modes_index = 3;
             freq_index = 2;
         } else if (IEEE80211_IS_CHAN_HT20(chan) || IEEE80211_IS_CHAN_G(chan) || IEEE80211_IS_CHAN_B(chan) || IEEE80211_IS_CHAN_PUREG(chan)) {
+            if (AR_SREV_SCORPION(ah)){
+                modes_txgaintable_index = 8;
+            }
             modes_index = 4;
             freq_index = 2;
         } else
