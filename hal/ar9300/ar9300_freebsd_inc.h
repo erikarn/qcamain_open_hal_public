@@ -27,7 +27,7 @@
 #define ATH_GEN_RANDOMNESS      0
 #define __PKT_SERIOUS_ERRORS__  0
 #define HAL_INTR_REFCOUNT_DISABLE       1       /* XXX wha? And atomics in the HAL!? */
-#define UMAC_SUPPORT_SMARTANTENNA       0       /* sigh.. */
+//#define UMAC_SUPPORT_SMARTANTENNA       0       /* sigh.. */
 #define ATH_SMARTANTENNA_DISABLE_JTAG   0
 #define ATH_SUPPORT_WIRESHARK           0
 #define ATH_SUPPORT_WIFIPOS     0
