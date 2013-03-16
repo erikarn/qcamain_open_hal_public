@@ -2294,7 +2294,9 @@ ar9300_eeprom_set_power_per_rate_table(
     u_int8_t ctl_num;
     u_int16_t twice_min_edge_power;
     u_int16_t twice_max_edge_power = AR9300_MAX_RATE_POWER;
+#ifdef	AH_DEBUG
     HAL_CHANNEL_INTERNAL *ichan = ath_hal_checkchannel(ah, chan);
+#endif
 
     tx_chainmask = chainmask ? chainmask : ahp->ah_tx_chainmask;
 
