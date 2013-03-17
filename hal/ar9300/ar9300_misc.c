@@ -52,14 +52,13 @@ ar9300_get_hw_hangs(struct ath_hal *ah, hal_hw_hangs_t *hangs)
 }
 
 /*
- * XXX FreeBSD:
- *
- * .. why is this even _here_ ? See who's using it.. convert to using
- * the ath_hal_mac_usec() function that ALREADY knows about HT20/HT40.
+ * XXX FreeBSD: the HAL version of ath_hal_mac_usec() knows about
+ * HT20, HT40, fast-clock, turbo mode, etc.
  */
 static u_int
 ar9300_mac_to_usec(struct ath_hal *ah, u_int clks)
 {
+#if 0
     const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
 
     if (chan && IEEE80211_IS_CHAN_HT40(chan)) {
@@ -67,11 +66,14 @@ ar9300_mac_to_usec(struct ath_hal *ah, u_int clks)
     } else {
         return (ath_hal_mac_usec(ah, clks));
     }
+#endif
+    return (ath_hal_mac_usec(ah, clks));
 }
 
 u_int
 ar9300_mac_to_clks(struct ath_hal *ah, u_int usecs)
 {
+#if 0
     const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
 
     if (chan && IEEE80211_IS_CHAN_HT40(chan)) {
@@ -79,6 +81,8 @@ ar9300_mac_to_clks(struct ath_hal *ah, u_int usecs)
     } else {
         return (ath_hal_mac_clks(ah, usecs));
     }
+#endif
+    return (ath_hal_mac_clks(ah, usecs));
 }
 
 void
