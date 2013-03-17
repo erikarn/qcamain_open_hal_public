@@ -47,6 +47,13 @@ ar9300SetChainMasks(struct ath_hal *ah, uint32_t tx_chainmask,
 	    rx_chainmask & AH_PRIVATE(ah)->ah_caps.halRxChainMask;
 }
 
+static u_int
+ar9300GetSlotTime(struct ath_hal *ah)
+{
+	u_int clks = OS_REG_READ(ah, AR_D_GBL_IFS_SLOT) & 0xffff;
+	return (ath_hal_mac_usec(ah, clks));	/* convert from system clocks */
+}
+
 void
 ar9300_attach_freebsd_ops(struct ath_hal *ah)
 {
@@ -144,6 +151,7 @@ ar9300_attach_freebsd_ops(struct ath_hal *ah)
 	// ah->ah_setSifsTime		= ar9300_set_sifs_time;
 	// ah->ah_getSifsTime		= ar9300_get_sifs_time;
 	ah->ah_setSlotTime		= ar9300_set_slot_time;
+	ah->ah_getSlotTime		= ar9300GetSlotTime;
 	ah->ah_getAckTimeout	= ar9300_get_ack_timeout;
 	ah->ah_setAckTimeout	= ar9300_set_ack_timeout;
 	// XXX ack/ctsrate
