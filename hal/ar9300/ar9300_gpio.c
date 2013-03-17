@@ -26,7 +26,7 @@
 /*
  * Configure GPIO Output Mux control
  */
-#ifdef UMAC_SUPPORT_SMARTANTENNA
+#if UMAC_SUPPORT_SMARTANTENNA
 static void  ar9340_soc_gpio_cfg_output_mux(
     struct ath_hal *ah, 
     u_int32_t gpio, 
@@ -194,7 +194,7 @@ ar9300_gpio_cfg_output(
 
     if (smart_ant && AR_SREV_WASP(ah))
     {
-#ifdef UMAC_SUPPORT_SMARTANTENNA
+#if UMAC_SUPPORT_SMARTANTENNA
         ar9340_soc_gpio_cfg_output_mux(ah, gpio, ah_signal_type);
 #endif
         return AH_TRUE;
