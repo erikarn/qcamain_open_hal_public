@@ -101,6 +101,7 @@ ar9300_attach_freebsd_ops(struct ath_hal *ah)
 	ah->ah_getTxDescLinkPtr	= ar9300_get_desc_link_ptr;
 	ah->ah_setupTxStatusRing	= ar9300_setup_tx_status_ring;
 	ah->ah_getTxRawTxDesc	 = ar9300_get_raw_tx_desc;
+	ah->ah_updateTxTrigLevel	= ar9300_update_tx_trig_level;
 
 	/* RX functions */
 	ah->ah_getRxDP		= ar9300_get_rx_dp;
