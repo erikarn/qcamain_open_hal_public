@@ -702,9 +702,15 @@ ar9300_get_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
             return HAL_ENOTSUPP;
         }
     case HAL_CAP_TKIP_SPLIT:        /* hardware TKIP uses split keys */
-        /* XXX check rev when new parts are available */
-        return (ahp->ah_misc_mode & AR_PCU_MIC_NEW_LOC_ENA) ?
-            HAL_ENXIO : HAL_OK;
+        switch (capability) {
+        case 0: /* hardware capability */
+            return p_cap->halTkipMicTxRxKeySupport ? HAL_ENXIO : HAL_OK;
+        case 1: /* current setting */
+            return (ahp->ah_misc_mode & AR_PCU_MIC_NEW_LOC_ENA) ?
+                HAL_ENXIO : HAL_OK;
+        default:
+            return HAL_ENOTSUPP;
+        }
     case HAL_CAP_WME_TKIPMIC:
         /* hardware can do TKIP MIC when WMM is turned on */
         return HAL_OK;
@@ -904,6 +910,18 @@ ar9300_set_capability(struct ath_hal *ah, HAL_CAPABILITY_TYPE type,
     u_int32_t v;
 
     switch (type) {
+    case HAL_CAP_TKIP_SPLIT:        /* hardware TKIP uses split keys */
+        if (! p_cap->halTkipMicTxRxKeySupport)
+            return AH_FALSE;
+
+        if (setting)
+            ahp->ah_misc_mode &= ~AR_PCU_MIC_NEW_LOC_ENA;
+        else
+            ahp->ah_misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
+
+        OS_REG_WRITE(ah, AR_PCU_MISC, ahp->ah_misc_mode);
+        return AH_TRUE;
+
     case HAL_CAP_TKIP_MIC:          /* handle TKIP MIC in hardware */
         if (setting) {
             ahp->ah_sta_id1_defaults |= AR_STA_ID1_CRPT_MIC_ENABLE;

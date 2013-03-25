@@ -2596,6 +2596,7 @@ ar9300_fill_capability_info(struct ath_hal *ah)
      *
      */
     ahp->ah_misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
+    p_cap->halTkipMicTxRxKeySupport = AH_TRUE;
 
     p_cap->halLow2GhzChan = 2312;
     p_cap->halHigh2GhzChan = 2732;
