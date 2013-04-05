@@ -41,19 +41,17 @@
 
 #define ATH_WOW_OFFLOAD 0
 
-#define _MAVERICK_STA_ 0
-
 #define HAL_NO_INTERSPERSED_READS
 
 /* Required or things will probe/attach, but not work right */
-#define AH_SUPPORT_OSPREY               1
-#define AH_SUPPORT_HORNET               1
-#define AH_SUPPORT_WASP                 1
-#define AH_SUPPORT_SCORPION             1
-#define AH_SUPPORT_POSEIDON             1
-/* #define AH_SUPPORT_WASP  1 */
-/* #define AH_SUPPORT_HORNET 1 */
-/* #define AH_SUPPORT_SCORPION 1 */
+#define	AH_SUPPORT_OSPREY		1
+#define	AH_SUPPORT_POSEIDON		1
+#define	AH_SUPPORT_AR9300		1
+
+/* These are the embedded boards; we don't currently support these */
+//#define AH_SUPPORT_HORNET               1
+//#define AH_SUPPORT_WASP                 1
+//#define AH_SUPPORT_SCORPION             1
 
 #define FIX_NOISE_FLOOR                 1
 
