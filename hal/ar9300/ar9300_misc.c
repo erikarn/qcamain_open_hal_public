@@ -2365,8 +2365,8 @@ ar9300_bt_coex_antenna_diversity(struct ath_hal *ah, u_int32_t value)
 {
     struct ath_hal_9300 *ahp = AH9300(ah);
 #if ATH_ANT_DIV_COMB    
-    struct ath_hal_private *ahpriv = AH_PRIVATE(ah);
-    HAL_CHANNEL *chan = (HAL_CHANNEL *) ahpriv->ah_curchan;
+    //struct ath_hal_private *ahpriv = AH_PRIVATE(ah);
+    const struct ieee80211_channel *chan = AH_PRIVATE(ah)->ah_curchan;
 #endif
 
     if (ahp->ah_bt_coex_flag & HAL_BT_COEX_FLAG_ANT_DIV_ALLOW)
@@ -2396,8 +2396,8 @@ ar9300_bt_coex_set_parameter(struct ath_hal *ah, u_int32_t type,
             } else {
                 ahp->ah_bt_coex_flag &= ~HAL_BT_COEX_FLAG_LOW_ACK_PWR;
             }
-            ar9300_set_tx_power_limit(ah, ahpriv->ah_power_limit,
-                ahpriv->ah_extra_txpow, 0);
+            ar9300_set_tx_power_limit(ah, ahpriv->ah_powerLimit,
+                ahpriv->ah_extraTxPow, 0);
             break;
 
         case HAL_BT_COEX_ANTENNA_DIVERSITY:
@@ -2419,12 +2419,12 @@ ar9300_bt_coex_set_parameter(struct ath_hal *ah, u_int32_t type,
             else {
                 ahp->ah_bt_coex_flag &= ~HAL_BT_COEX_FLAG_LOWER_TX_PWR;
             }
-            ar9300_set_tx_power_limit(ah, ahpriv->ah_power_limit,
-                                      ahpriv->ah_extra_txpow, 0);
+            ar9300_set_tx_power_limit(ah, ahpriv->ah_powerLimit,
+                                      ahpriv->ah_extraTxPow, 0);
             break;
 #if ATH_SUPPORT_MCI
         case HAL_BT_COEX_MCI_MAX_TX_PWR:
-            if ((ahpriv->ah_config.ath_hal_mci_config & 
+            if ((ah->ah_config.ath_hal_mci_config & 
                  ATH_MCI_CONFIG_CONCUR_TX) == ATH_MCI_CONCUR_TX_SHARED_CHN)
             {
                 if (value) {
@@ -2435,8 +2435,8 @@ ar9300_bt_coex_set_parameter(struct ath_hal *ah, u_int32_t type,
                     ahp->ah_bt_coex_flag &= ~HAL_BT_COEX_FLAG_MCI_MAX_TX_PWR;
                     ahp->ah_mci_concur_tx_en = AH_FALSE;
                 }
-                ar9300_set_tx_power_limit(ah, ahpriv->ah_power_limit,
-                                          ahpriv->ah_extra_txpow, 0);
+                ar9300_set_tx_power_limit(ah, ahpriv->ah_powerLimit,
+                                          ahpriv->ah_extraTxPow, 0);
             }
             HALDEBUG(ah, HAL_DEBUG_BT_COEX, "(MCI) concur_tx_en = %d\n", 
                      ahp->ah_mci_concur_tx_en);
@@ -2571,8 +2571,8 @@ ar9300_init_bt_coex(struct ath_hal *ah)
             ahp->ah_bt_priority_gpio_select);
 
         /* Configure the desired GPIO ports for input */
-        ath_hal_gpio_cfg_input(ah, ahp->ah_bt_active_gpio_select);
-        ath_hal_gpio_cfg_input(ah, ahp->ah_bt_priority_gpio_select); 
+        ath_hal_gpioCfgInput(ah, ahp->ah_bt_active_gpio_select);
+        ath_hal_gpioCfgInput(ah, ahp->ah_bt_priority_gpio_select);
 
         if (ahp->ah_bt_coex_enabled) {
             ar9300_bt_coex_enable(ah);
@@ -2604,7 +2604,7 @@ ar9300_init_bt_coex(struct ath_hal *ah)
                 ahp->ah_bt_active_gpio_select);
 
             /* Configure the desired GPIO ports for input */
-            ath_hal_gpio_cfg_input(ah, ahp->ah_bt_active_gpio_select);
+            ath_hal_gpioCfgInput(ah, ahp->ah_bt_active_gpio_select);
 
             /* Enable coexistence on initialization */
             ar9300_bt_coex_enable(ah);

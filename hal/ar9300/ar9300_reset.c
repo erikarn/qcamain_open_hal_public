@@ -2565,9 +2565,7 @@ ar9300_set_tx_power_limit(struct ath_hal *ah, u_int32_t limit,
     }
 
     ahpriv->ah_powerLimit = AH_MIN(limit, MAX_RATE_POWER);
-#if 0
-    ahpriv->ah_extra_txpow = extra_txpow;
-#endif
+    ahpriv->ah_extraTxPow = extra_txpow;
 
     if(chan == NULL) {
         return AH_FALSE;
@@ -6103,7 +6101,7 @@ void ar9300_chain_rssi_diff_compensation(struct ath_hal *ah)
 
 #if ATH_ANT_DIV_COMB
 HAL_BOOL
-ar9300_ant_ctrl_set_lna_div_use_bt_ant(struct ath_hal *ah, HAL_BOOL enable, struct ieee80211_channel *chan)
+ar9300_ant_ctrl_set_lna_div_use_bt_ant(struct ath_hal *ah, HAL_BOOL enable, const struct ieee80211_channel *chan)
 {
     u_int32_t value;
     u_int32_t regval;

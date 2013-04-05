@@ -1433,7 +1433,7 @@ extern void ar9300_rx_gain_table_apply(struct ath_hal *ah);
 extern void ar9300_tx_gain_table_apply(struct ath_hal *ah);
 extern void ar9300_mat_enable(struct ath_hal *ah, int enable);
 extern void ar9300_dump_keycache(struct ath_hal *ah, int n, u_int32_t *entry);
-extern HAL_BOOL ar9300_ant_ctrl_set_lna_div_use_bt_ant(struct ath_hal * ah, HAL_BOOL enable, struct ieee80211_channel * chan);
+extern HAL_BOOL ar9300_ant_ctrl_set_lna_div_use_bt_ant(struct ath_hal * ah, HAL_BOOL enable, const struct ieee80211_channel * chan);
 
 /* BB Panic Watchdog declarations */
 #define HAL_BB_PANIC_WD_TMO                 25 /* in ms, 0 to disable */
