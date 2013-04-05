@@ -2555,10 +2555,10 @@ HAL_BOOL
 ar9300_set_tx_power_limit(struct ath_hal *ah, u_int32_t limit,
     u_int16_t extra_txpow, u_int16_t tpc_in_db)
 {
-//    struct ath_hal_9300 *ahp = AH9300(ah);
+    struct ath_hal_9300 *ahp = AH9300(ah);
     struct ath_hal_private *ahpriv = AH_PRIVATE(ah);
     const struct ieee80211_channel *chan = ahpriv->ah_curchan;
-//    HAL_CHANNEL_INTERNAL *ichan = ath_hal_checkchannel(ah, chan);
+    HAL_CHANNEL_INTERNAL *ichan = ath_hal_checkchannel(ah, chan);
 
     if (NULL == chan) {
         return AH_FALSE;
@@ -2567,18 +2567,18 @@ ar9300_set_tx_power_limit(struct ath_hal *ah, u_int32_t limit,
     ahpriv->ah_powerLimit = AH_MIN(limit, MAX_RATE_POWER);
 #if 0
     ahpriv->ah_extra_txpow = extra_txpow;
+#endif
 
     if(chan == NULL) {
         return AH_FALSE;
     }
-    if (ar9300_eeprom_set_transmit_power(ah, &ahp->ah_eeprom, ichan,
+    if (ar9300_eeprom_set_transmit_power(ah, &ahp->ah_eeprom, chan,
         ath_hal_getctl(ah, chan), ath_hal_getantennaallowed(ah, chan),
         ath_hal_get_twice_max_regpower(ahpriv, ichan, chan),
         AH_MIN(MAX_RATE_POWER, ahpriv->ah_powerLimit)) != HAL_OK)
     {
         return AH_FALSE;
     }
-#endif
     return AH_TRUE;
 }
 

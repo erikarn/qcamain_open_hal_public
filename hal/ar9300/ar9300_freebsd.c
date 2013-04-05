@@ -54,6 +54,13 @@ ar9300GetSlotTime(struct ath_hal *ah)
 	return (ath_hal_mac_usec(ah, clks));	/* convert from system clocks */
 }
 
+static HAL_BOOL
+ar9300_freebsd_set_tx_power_limit(struct ath_hal *ah, uint32_t limit)
+{
+	return (ar9300_set_tx_power_limit(ah, limit, 0, 0));
+}
+
+
 void
 ar9300_attach_freebsd_ops(struct ath_hal *ah)
 {
@@ -75,7 +82,7 @@ ar9300_attach_freebsd_ops(struct ath_hal *ah)
 	// perCalibration
 	ah->ah_perCalibrationN	= ar9300_per_calibration_freebsd;
 	ah->ah_resetCalValid	= ar9300_reset_cal_valid_freebsd;
-	// setTxPowerLimit
+	ah->ah_setTxPowerLimit	= ar9300_freebsd_set_tx_power_limit;
 	ah->ah_getChanNoise		= ath_hal_getChanNoise;
 
 	/* Transmit functions */
