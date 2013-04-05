@@ -1870,7 +1870,7 @@ ar9300_set_reset_reg(struct ath_hal *ah, u_int32_t type)
     }
     
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
         OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
     }
 #endif
@@ -3483,11 +3483,11 @@ ar9300_init_cal_internal(struct ath_hal *ah, struct ieee80211_channel *chan,
     }
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support &&
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport &&
         IS_CHAN_2GHZ(ichan) &&
         (ahp->ah_mci_bt_state == MCI_BT_AWAKE) &&
         do_agc_cal &&
-        !(AH_PRIVATE(ah)->ah_config.ath_hal_mci_config & 
+        !(ah->ah_config.ath_hal_mci_config & 
         ATH_MCI_CONFIG_DISABLE_MCI_CAL))
     {
         u_int32_t payload[4] = {0, 0, 0, 0};
@@ -3597,11 +3597,11 @@ ar9300_init_cal_internal(struct ath_hal *ah, struct ieee80211_channel *chan,
 
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support &&
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport &&
         IS_CHAN_2GHZ(ichan) &&
         (ahp->ah_mci_bt_state == MCI_BT_AWAKE) &&
         do_agc_cal &&
-        !(AH_PRIVATE(ah)->ah_config.ath_hal_mci_config & 
+        !(ah->ah_config.ath_hal_mci_config & 
         ATH_MCI_CONFIG_DISABLE_MCI_CAL))
     {
         u_int32_t payload[4] = {0, 0, 0, 0};
@@ -4320,10 +4320,10 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
     }
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support &&
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport &&
         (AR_SREV_JUPITER_20(ah) || AR_SREV_APHRODITE(ah)))
     {
-        ar9300_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
+        ar9300_mci_2g5g_changed(ah, IEEE80211_IS_CHAN_2GHZ(chan));
     }
 #endif
 
@@ -4372,7 +4372,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
     }
 
 #if ATH_SUPPORT_MCI
-    if ((AH_PRIVATE(ah)->ah_caps.hal_mci_support) &&
+    if ((AH_PRIVATE(ah)->ah_caps.halMciSupport) &&
         (ahp->ah_mci_bt_state == MCI_BT_CAL_START))
     {
         u_int32_t payload[4] = {0, 0, 0, 0};
@@ -4532,7 +4532,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
             if (AH9300(ah)->ah_dma_stuck != AH_TRUE) {
                 WAR_USB_DISABLE_PLL_LOCK_DETECT(ah);
 #if ATH_SUPPORT_MCI
-                if (AH_PRIVATE(ah)->ah_caps.hal_mci_support && ahp->ah_mci_ready)
+                if (AH_PRIVATE(ah)->ah_caps.halMciSupport && ahp->ah_mci_ready)
                 {
                     ar9300_mci_2g5g_switch(ah, AH_TRUE);
                 }
@@ -4544,7 +4544,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
 #endif /* #if 0 */
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
         ar9300_mci_disable_interrupt(ah);
         if (ahp->ah_mci_ready && !save_full_sleep) {
             ar9300_mci_mute_bt(ah);
@@ -4553,7 +4553,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
         }
 
         ahp->ah_mci_bt_state = MCI_BT_SLEEP;
-        ahp->ah_mci_ready = HAL_FALSE;
+        ahp->ah_mci_ready = AH_FALSE;
     }
 #endif
 
@@ -4630,8 +4630,8 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
     }
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
-        ar9300_mci_reset(ah, AH_FALSE, IS_CHAN_2GHZ(chan), save_full_sleep);
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
+        ar9300_mci_reset(ah, AH_FALSE, IS_CHAN_2GHZ(ichan), save_full_sleep);
     }
 #endif
 
@@ -4776,7 +4776,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
      * program OBS bus to see MAC interrupts
      */
 #if ATH_SUPPORT_MCI
-    if (!AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+    if (!AH_PRIVATE(ah)->ah_caps.halMciSupport) {
         OS_REG_WRITE(ah, AR_HOSTIF_REG(ah, AR_OBS), 8);
     }
 #else
@@ -4855,8 +4855,8 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
     cal_ret = ar9300_init_cal(ah, chan, AH_FALSE, apply_last_iqcorr);
 
 #if ATH_SUPPORT_MCI
-    if (AH_PRIVATE(ah)->ah_caps.hal_mci_support && ahp->ah_mci_ready) {
-        if (IS_CHAN_2GHZ(chan) &&
+    if (AH_PRIVATE(ah)->ah_caps.halMciSupport && ahp->ah_mci_ready) {
+        if (IS_CHAN_2GHZ(ichan) &&
             (ahp->ah_mci_bt_state == MCI_BT_SLEEP))
         {
             if (ar9300_mci_check_int(ah, AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
@@ -4877,7 +4877,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
                 ar9300_mci_remote_reset(ah, AH_TRUE);
                 ar9300_mci_send_sys_waking(ah, AH_TRUE);
                 OS_DELAY(1);
-                if (IS_CHAN_2GHZ(chan)) {
+                if (IS_CHAN_2GHZ(ichan)) {
                     ar9300_mci_send_lna_transfer(ah, AH_TRUE);
                 }
                 ahp->ah_mci_bt_state = MCI_BT_AWAKE;
@@ -4886,7 +4886,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
                 HALDEBUG(ah, HAL_DEBUG_BT_COEX, "(MCI) %s: Re-calibrate.\n",
                     __func__);
                 ar9300_invalidate_saved_cals(ah, ichan);
-                cal_ret = ar9300_init_cal(ah, chan, AH_FALSE, ar9300_init_cal);
+                cal_ret = ar9300_init_cal(ah, chan, AH_FALSE, apply_last_iqcorr);
             }
         }
         ar9300_mci_enable_interrupt(ah);
@@ -4918,7 +4918,7 @@ ar9300_reset(struct ath_hal *ah, HAL_OPMODE opmode, struct ieee80211_channel *ch
         ar9300_init_bt_coex(ah);
 
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support && ahp->ah_mci_ready) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport && ahp->ah_mci_ready) {
             /* Check BT state again to make sure it's not changed. */
             ar9300_mci_sync_bt_state(ah);
             ar9300_mci_2g5g_switch(ah, AH_TRUE);

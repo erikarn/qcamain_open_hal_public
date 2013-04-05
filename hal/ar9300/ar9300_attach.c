@@ -643,6 +643,12 @@ ar9300_attach(u_int16_t devid, HAL_SOFTC sc, HAL_BUS_TAG st,
     /* XXX FreeBSD: enable RX mitigation */
     ah->ah_config.ath_hal_intr_mitigation_rx = 1;
 
+    /*
+     * XXX what's this do? Check in the qcamain driver code
+     * as to what it does.
+     */
+    ah->ah_config.ath_hal_ext_atten_margin_cfg = 0;
+
     /* interrupt mitigation */
 #ifdef AR5416_INT_MITIGATION
     if (ah->ah_config.ath_hal_intr_mitigation_rx != 0) {
@@ -699,9 +705,11 @@ ar9300_attach(u_int16_t devid, HAL_SOFTC sc, HAL_BUS_TAG st,
 
 #if ATH_SUPPORT_MCI
     if (AR_SREV_JUPITER(ah) || AR_SREV_APHRODITE(ah)) {
+#if 0
         ah->ah_bt_coex_set_weights = ar9300_mci_bt_coex_set_weights;
         ah->ah_bt_coex_disable = ar9300_mci_bt_coex_disable;
         ah->ah_bt_coex_enable = ar9300_mci_bt_coex_enable;
+#endif
         ahp->ah_mci_ready = AH_FALSE;
         ahp->ah_mci_bt_state = MCI_BT_SLEEP;
         ahp->ah_mci_coex_major_version_wlan = MCI_GPM_COEX_MAJOR_VERSION_WLAN;

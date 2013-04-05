@@ -671,14 +671,14 @@ ar9300_set_power_mode(struct ath_hal *ah, HAL_POWER_MODE mode, int set_chip)
     case HAL_PM_AWAKE:
         status = ar9300_set_power_mode_awake(ah, set_chip);
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif
         break;
     case HAL_PM_FULL_SLEEP:
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             if (ar9300_get_power_mode(ah) == HAL_PM_AWAKE) {
                 if ((ar9300_mci_state(ah, HAL_MCI_STATE_ENABLE, NULL) != 0) &&
                     (ahp->ah_mci_bt_state != MCI_BT_SLEEP) &&
@@ -693,7 +693,7 @@ ar9300_set_power_mode(struct ath_hal *ah, HAL_POWER_MODE mode, int set_chip)
         }
 #endif
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif
@@ -702,7 +702,7 @@ ar9300_set_power_mode(struct ath_hal *ah, HAL_POWER_MODE mode, int set_chip)
         break;
     case HAL_PM_NETWORK_SLEEP:
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif
@@ -990,7 +990,7 @@ ar9300_set_power_mode_wow_sleep(struct ath_hal *ah)
             "%s: TODO How to disable RXDP!!\n", __func__);
 
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif
@@ -1366,7 +1366,7 @@ ar9300_wow_enable(
         /* Force MAC awake before entering SW WoW mode */
         OS_REG_SET_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif
@@ -1393,7 +1393,7 @@ ar9300_wow_enable(
 #endif /* ATH_WOW_OFFLOAD */
     {
 #if ATH_SUPPORT_MCI
-        if (AH_PRIVATE(ah)->ah_caps.hal_mci_support) {
+        if (AH_PRIVATE(ah)->ah_caps.halMciSupport) {
             OS_REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
         }
 #endif

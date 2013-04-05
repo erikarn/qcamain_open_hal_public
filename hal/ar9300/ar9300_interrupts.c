@@ -343,7 +343,7 @@ ar9300_get_pending_interrupts(
 
 #if ATH_SUPPORT_MCI
         if ((async_cause & AR_INTR_ASYNC_CAUSE_MCI) &&
-            p_cap->hal_mci_support)
+            p_cap->halMciSupport)
         {
             u_int32_t int_raw, int_rx_msg;
 
