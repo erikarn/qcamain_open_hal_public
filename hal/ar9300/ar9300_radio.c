@@ -90,7 +90,9 @@ ar9300_set_channel(struct ath_hal *ah, struct ieee80211_channel *chan)
     HAL_CHANNEL_INTERNAL *ichan = ath_hal_checkchannel(ah, chan);
 #endif
 
+#ifdef	AH_DEBUG
     OS_MARK(ah, AH_MARK_SETCHANNEL, ichan->channel);
+#endif
 
     ar9300_get_channel_centers(ah, chan, &centers);
     freq = centers.synth_center;
