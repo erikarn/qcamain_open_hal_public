@@ -639,6 +639,17 @@ ar9300_attach(u_int16_t devid, HAL_SOFTC sc, HAL_BUS_TAG st,
 
     /* FreeBSD: to make OTP work for now, provide this.. */
     AH9300(ah)->ah_cal_mem = ath_hal_malloc(HOST_CALDATA_SIZE);
+    if (AH9300(ah)->ah_cal_mem == NULL) {
+        ath_hal_printf(ah, "%s: caldata malloc failed!\n", __func__);
+        ecode = HAL_EIO;
+        goto bad;
+    }
+
+    /*
+     * If eepromdata is not NULL, copy it it into ah_cal_mem.
+     */
+    if (eepromdata != NULL)
+        OS_MEMCPY(AH9300(ah)->ah_cal_mem, eepromdata, HOST_CALDATA_SIZE);
 
     /* XXX FreeBSD: enable RX mitigation */
     ah->ah_config.ath_hal_intr_mitigation_rx = 1;
@@ -2916,6 +2927,17 @@ ar9300_fill_capability_info(struct ath_hal *ah)
     }
 #endif /* ATH_ANT_DIV_COMB */
 
+    /*
+     * FreeBSD: enable LNA mixing if the chip is Hornet or Poseidon.
+     */
+    if (AR_SREV_HORNET(ah) || AR_SREV_POSEIDON_11_OR_LATER(ah)) {
+        p_cap->halRxUsingLnaMixing = AH_TRUE;
+    }
+
+    /*
+     * AR5416 and later NICs support MYBEACON filtering.
+     */
+    p_cap->halRxDoMyBeacon = AH_TRUE;
 
 #if ATH_WOW_OFFLOAD
     if (AR_SREV_JUPITER_20_OR_LATER(ah) || AR_SREV_APHRODITE(ah)) {
@@ -4091,6 +4113,8 @@ ar9300_probe(uint16_t vendorid, uint16_t devid)
         return "Qualcomm Atheros QCA955x";
     case AR9300_DEVID_QCA9565: /* Aphrodite */
          return "Qualcomm Atheros AR9565";
+    case AR9300_DEVID_AR1111_PCIE:
+         return "Atheros AR1111";
     default:
         return AH_NULL;
     }
