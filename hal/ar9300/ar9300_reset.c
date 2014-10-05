@@ -778,6 +778,11 @@ ar9300_set_delta_slope(struct ath_hal *ah, struct ieee80211_channel *chan)
 HAL_CHANNEL_INTERNAL *
 ar9300_check_chan(struct ath_hal *ah, const struct ieee80211_channel *chan)
 {
+
+    if (chan == NULL) {
+        return AH_NULL;
+    }
+
     if ((IS(chan, CHAN_2GHZ) ^ IS(chan, CHAN_5GHZ)) == 0) {
         HALDEBUG(ah, HAL_DEBUG_CHANNEL,
             "%s: invalid channel %u/0x%x; not marked as 2GHz or 5GHz\n",
@@ -1327,7 +1332,7 @@ ar9300_set_operating_mode(struct ath_hal *ah, int opmode)
 }
 
 /* XXX need the logic for Osprey */
-inline void
+void
 ar9300_init_pll(struct ath_hal *ah, struct ieee80211_channel *chan)
 {
     u_int32_t pll;
@@ -1982,13 +1987,25 @@ HAL_BOOL
 ar9300_chip_reset(struct ath_hal *ah, struct ieee80211_channel *chan)
 {
     struct ath_hal_9300     *ahp = AH9300(ah);
+    int type = HAL_RESET_WARM;
 
     OS_MARK(ah, AH_MARK_CHIPRESET, chan ? chan->ic_freq : 0);
 
     /*
      * Warm reset is optimistic.
+     *
+     * If the TX/RX DMA engines aren't shut down (eg, they're
+     * wedged) then we're better off doing a full cold reset
+     * to try and shake that condition.
      */
-    if (!ar9300_set_reset_reg(ah, HAL_RESET_WARM)) {
+    if (ahp->ah_chip_full_sleep ||
+        (ah->ah_config.ah_force_full_reset == 1) ||
+        OS_REG_READ(ah, AR_Q_TXE) ||
+        (OS_REG_READ(ah, AR_CR) & AR_CR_RXE)) {
+            type = HAL_RESET_COLD;
+    }
+
+    if (!ar9300_set_reset_reg(ah, type)) {
         return AH_FALSE;
     }
 
@@ -3554,7 +3571,7 @@ ar9300_init_cal_internal(struct ath_hal *ah, struct ieee80211_channel *chan,
              * no chip specific code for Jupiter/Posdeion except for register names.
              */
             if (txiqcal_success_flag) {
-                ar9300_tx_iq_cal_post_proc(ah,ichan, 1, 1,is_cal_reusable,false);
+                ar9300_tx_iq_cal_post_proc(ah,ichan, 1, 1,is_cal_reusable, AH_FALSE);
             }
     } else {
         if (!txiqcal_success_flag) {
