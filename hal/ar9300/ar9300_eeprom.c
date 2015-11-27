@@ -4476,6 +4476,7 @@ HAL_BOOL ar9300_tuning_caps_apply(struct ath_hal *ah)
     if ((eep->base_eep_header.feature_enable & 0x40) >> 6) {
         tuning_caps_params &= 0x7f;
 
+        /* XXX TODO: ath9k skips it for Wasp and Honeybee/AR9531, not Poseidon */
         if (AR_SREV_POSEIDON(ah) || AR_SREV_WASP(ah)) {
             return AH_TRUE;
         } else if (AR_SREV_HORNET(ah)) {
