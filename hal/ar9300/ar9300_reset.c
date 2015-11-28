@@ -288,7 +288,7 @@ ar9300_upload_noise_floor(struct ath_hal *ah, int is_2g,
      */
     if (AR_SREV_HORNET(ah) || AR_SREV_POSEIDON(ah) || AR_SREV_APHRODITE(ah)) {
         chainmask = 0x01;
-    } else if (AR_SREV_WASP(ah) || AR_SREV_JUPITER(ah)) {
+    } else if (AR_SREV_WASP(ah) || AR_SREV_JUPITER(ah) || AR_SREV_HONEYBEE(ah)) {
         chainmask = 0x03;
     } else {
         chainmask = 0x07;
@@ -2231,7 +2231,7 @@ ar9300_load_nf(struct ath_hal *ah, int16_t nf[])
      */
     if (AR_SREV_HORNET(ah) || AR_SREV_POSEIDON(ah) || AR_SREV_APHRODITE(ah)) {
         chainmask = 0x9;
-    } else if (AR_SREV_WASP(ah) || AR_SREV_JUPITER(ah)) {
+    } else if (AR_SREV_WASP(ah) || AR_SREV_JUPITER(ah) || AR_SREV_HONEYBEE(ah)) {
         chainmask = 0x1b;
     } else {
         chainmask = 0x3F;
