@@ -565,6 +565,9 @@ ar9300_read_revisions(struct ath_hal *ah)
     } else if(AH_PRIVATE(ah)->ah_devid == AR9300_DEVID_QCA955X) {
         /* XXX: AR_SREV register in Scorpion reads 0 */
        AH_PRIVATE(ah)->ah_macVersion = AR_SREV_VERSION_SCORPION;
+    } else if(AH_PRIVATE(ah)->ah_devid == AR9300_DEVID_QCA953X) {
+        /* XXX: AR_SREV register in HoneyBEE reads 0 */
+       AH_PRIVATE(ah)->ah_macVersion = AR_SREV_VERSION_HONEYBEE;
     } else {
         /*
          * Include 6-bit Chip Type (masked to 0)
