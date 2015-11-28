@@ -3059,13 +3059,13 @@ enum {
 
 #if defined(AH_SUPPORT_HONEYBEE)
 #define AR_SREV_HONEYBEE(_ah) \
-    ((AH_PRIVATE((_ah))->ah_mac_version == AR_SREV_VERSION_HONEYBEE))
+    ((AH_PRIVATE((_ah))->ah_macVersion == AR_SREV_VERSION_HONEYBEE))
 #define AR_SREV_HONEYBEE_10(_ah) \
-    ((AH_PRIVATE((_ah))->ah_mac_version == AR_SREV_VERSION_HONEYBEE) && \
-     (AH_PRIVATE((_ah))->ah_mac_rev == AR_SREV_REVISION_HONEYBEE_10))
+    ((AH_PRIVATE((_ah))->ah_macVersion == AR_SREV_VERSION_HONEYBEE) && \
+     (AH_PRIVATE((_ah))->ah_macRev == AR_SREV_REVISION_HONEYBEE_10))
 #define AR_SREV_HONEYBEE_11(_ah) \
-    ((AH_PRIVATE((_ah))->ah_mac_version == AR_SREV_VERSION_HONEYBEE) && \
-     (AH_PRIVATE((_ah))->ah_mac_rev == AR_SREV_REVISION_HONEYBEE_11))
+    ((AH_PRIVATE((_ah))->ah_macVersion == AR_SREV_VERSION_HONEYBEE) && \
+     (AH_PRIVATE((_ah))->ah_macRev == AR_SREV_REVISION_HONEYBEE_11))
 #else
 #define AR_SREV_HONEYBEE(_ah)                                         0
 #define AR_SREV_HONEYBEE_10(_ah) 0
